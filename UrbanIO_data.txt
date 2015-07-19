@@ -1,0 +1,112 @@
+New Run: 2015/07/08 14:41:43
+first_trial
+Lights are: Smooth
+Mode: Random
+ 0
+Time=962.000000 velocity:0.945946
+Time=962.000000 velocity:0.945946
+Waiting for sensors 3 & 4..
+New Run: 2015/07/08 14:42:29
+lakjls
+Lights are: Sharp
+Mode: Random
+Caso Random..
+random int is: 0
+Time=683.000000 velocity:1.332357
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:43:32
+firsttrial
+Lights are: Sharp
+Mode: Random
+Caso Random..
+random int is: 0
+Time=762.000000 velocity:1.194226
+Time=762.000000 velocity:1.194226
+Waiting for sensors 3 & 4..
+New Run: 2015/07/08 14:44:01
+first
+Lights are: Smooth
+Mode: Before
+Before..
+Time=685.000000 velocity:1.328467
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:44:34
+firs
+Lights are: Smooth
+Mode: Before
+Caso Before..
+Time=833.000000 velocity:1.092437
+Time=833.000000 velocity:1.092437
+Waiting for sensors 3 & 4..
+New Run: 2015/07/08 14:47:16
+first
+Lights are: Sharp
+Mode: Before
+Caso Before..
+Time=724.000000 velocity:1.256906
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:49:13
+1
+Lights are: Sharp
+Mode: Before
+Caso Before..
+Time=699.000000 velocity:1.301860
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:49:44
+1
+Lights are: Sharp
+Mode: Before
+Caso Before..
+Time=777.000000 velocity:1.171171
+Time=777.000000 velocity:1.171171
+Waiting for sensors 3 & 4..
+New Run: 2015/07/08 14:50:50
+first
+Lights are: Smooth
+Mode: During
+Caso During..
+Time=681.000000 velocity:1.336270
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:51:26
+1
+Lights are: Smooth
+Mode: During
+Caso During..
+Time=814.000000 velocity:1.117936
+Time=814.000000 velocity:1.117936
+Waiting for sensors 3 & 4..
+New Run: 2015/07/08 14:52:55
+1
+Lights are: Sharp
+Mode: During
+Caso During..
+Time=654.000000 velocity:1.391437
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:55:21
+1
+Lights are: Smooth
+Mode: After
+Caso After..
+Time=679.000000 velocity:1.340206
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:57:38
+1
+Lights are: Sharp
+Mode: After
+Caso After..
+Time=721.000000 velocity:1.262136
+Waiting for sensors 1 & 2..
+New Run: 2015/07/08 14:58:07
+1
+Lights are: Sharp
+Mode: After
+No data recieved
+New Run: 2015/07/08 14:59:18
+sohamtest
+Lights are: Smooth
+Mode: Before
+Caso Before..
+Time=1112.000000 velocity:0.818345
+Time=1112.000000 velocity:0.818345
+Waiting for sensors 3 & 4..
+
