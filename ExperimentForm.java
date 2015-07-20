@@ -19,6 +19,7 @@ import java.io.IOException;
 import jssc.*;
 
 import java.util.Date;
+import java.util.Calendar;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -35,14 +36,14 @@ public class ExperimentForm extends JFrame implements ActionListener {
 	JLabel titleLabel;
 	JButton startButton;
 	SerialPort serialPort;
-	
+
 	int chosenMode;
 	int intensity;
 	String trialIDInput;
-	
+
 	public ExperimentForm() throws HeadlessException{
 		serialPort = new SerialPort("/dev/tty.usbmodem1422"); //set serial port
-		
+
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 		titleLabel = new JLabel("UrbanIO Experiment", JLabel.CENTER);
@@ -54,14 +55,14 @@ public class ExperimentForm extends JFrame implements ActionListener {
 		TrialIdField = new JTextField(10);
 		softHardField = new JTextField(10);
 		modeLabel = new JLabel("Mode: (1=Before, 2=During, 3=After, 4=Random, 5=Nothing)", JLabel.TRAILING);
-		
+
 		String[] modeArr = { "1. Before", "2. During", "3. After",
 				"4. Random", "5. Nothing"};
 		modeList = new JComboBox(modeArr);
-		
+
 		TrialLabel = new JLabel("Trial No:", JLabel.TRAILING);
 		softHardLabel = new JLabel("Smooth or Sharp (1 or 2):", JLabel.HORIZONTAL);
-		
+
 		mainPanel.add(titleLabel);
 		mainPanel.add(modeLabel);
 		modeLabel.setLabelFor(modeField);
@@ -70,12 +71,12 @@ public class ExperimentForm extends JFrame implements ActionListener {
 		mainPanel.add(TrialLabel);
 		TrialLabel.setLabelFor(TrialIdField);
 		mainPanel.add(TrialIdField);
-		
+
 		mainPanel.add(softHardLabel);
 		softHardLabel.setLabelFor(softHardField);
 		mainPanel.add(softHardField);
 		mainPanel.add(startButton);
-		
+
 
 		this.setContentPane(mainPanel);
 		this.setSize(300, 100);
@@ -83,65 +84,70 @@ public class ExperimentForm extends JFrame implements ActionListener {
 		this.pack();
 		this.setResizable(true);
 		this.setLocationRelativeTo(null);
-		this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);	
+		this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
 	}
-	
+
+	/* actionPerformed is used to handle any 'action performed'
+	*  such as pressing the Start/Stop run button
+	*/
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		//if start button is pressed
 		if (event.getSource() == startButton) {
 			if(startButton.getText().equals("Start Run"))
-			{	
+			{
+				//parse in all the data from the fields as their ASCII values
+				//i.e., 1 = 49, 2 = 50 and so on.
 				chosenMode = Integer.parseInt(modeField.getText()) + 48;
 				intensity = Integer.parseInt(softHardField.getText()) + 48;
 				trialIDInput = TrialIdField.getText();
 
+				//change text of start button to stop button
 				startButton.setText("Stop Run");
 				startButton.setToolTipText("Click to Stop the Run");
-				
+
 				 try {
 			            serialPort.openPort();//Open serial port
-			            serialPort.setParams(SerialPort.BAUDRATE_9600, 
+			            serialPort.setParams(SerialPort.BAUDRATE_9600,
 			                                 SerialPort.DATABITS_8,
 			                                 SerialPort.STOPBITS_1,
-			                                 SerialPort.PARITY_NONE);//Set params. Also you can set params by this string: serialPort.setParams(9600, 8, 1, 0);
-			            
-			            
-			            
-			            
+			                                 SerialPort.PARITY_NONE);
+									//Set params. Also you can set params by this string: serialPort.setParams(9600, 8, 1, 0);
+
 			            System.out.println(serialPort.readString());
-			            
-			            
+
+
 			            serialPort.writeInt(intensity);//Write intensity to port
-			            
-			            
+
+
 			            try {
-			                Thread.sleep(1000);                 //1000 milliseconds is one second.
+			                Thread.sleep(1000);                 //wait for 1000 milliseconds
 			            } catch(InterruptedException ex) {
 			                Thread.currentThread().interrupt();
 			            }
 			            System.out.println(serialPort.readString());
-			            
-			            
+
+
 			            serialPort.writeInt(chosenMode); //write mode to port
-			            
+
 			            try {
-			                Thread.sleep(1000);                 //1000 milliseconds is one second.
+			                Thread.sleep(1000);                 //wait for 1000 milliseconds
 			            } catch(InterruptedException ex) {
 			                Thread.currentThread().interrupt();
 			            }
 			            System.out.println(serialPort.readString());
-			            
-			            
-			            
-			            
+
+
+
+
 			            serialPort.writeInt(49); //write "Ready"
 			            try {
-			                Thread.sleep(1000);                 //1000 milliseconds is one second.
+			                Thread.sleep(1000);                 //wait for 1000 milliseconds
 			            } catch(InterruptedException ex) {
 			                Thread.currentThread().interrupt();
 			            }
 			            System.out.println(serialPort.readString());
-			            
+
 			            //create new file
 			            try{ //for creating a file
 				            File file = new File("UrbanIO_data.txt");
@@ -151,7 +157,7 @@ public class ExperimentForm extends JFrame implements ActionListener {
 				    		}
 				    		FileWriter fileWritter = new FileWriter(file,true);
 			    	        BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
-			    	      
+
 			    	        bufferWritter.write("New Run: ");
 			    	        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 							   //get current date time with Date()
@@ -183,31 +189,43 @@ public class ExperimentForm extends JFrame implements ActionListener {
 							default:
 								break;
 							}
-			    	        
-			    	        
-			    	        
-				            
-				            for (int i = 0; i < 50; i++) {
+
+
+
+
+				            for (int i = 0; i < 20; i++) {
 				            	String outputMbed = serialPort.readString();
+											String[] sensor_light_info;
+											int sensor_light_timestamp;
 				            	System.out.println(outputMbed);
 				            	//check what output mbed says and write to csv if necessary
 				            	if (outputMbed != null && outputMbed.contains("velocity")) { //EDIT BASED ON EXP
 				            		bufferWritter.write(outputMbed);
 				            		System.out.println("velocity hit");
-				            		bufferWritter.close();
 				            		break;
-				            	} else if (i > 40) {
+				            	} else if (outputMbed != null $$ outputMbed.contains(",")) {
+												sensor_light_info = outputMbed.split(",");
+												sensor_light_timestamp = Integer.parseInt(sensor_light_info[3]);
+
+												Calendar cal = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
+												cal.add(Calendar.SECOND, sensor_light_timestamp);
+												sensor_light_info[2] = "" + dateFormat.format(cal.getTime()) + "\n";
+												bufferWritter.write(combine_into_csv(sensor_light_info));
+
+
+
+											} else if (i > 40) { //else if the last sensors are triggered, break the loop.
 				            		bufferWritter.write("No data recieved\n");
 				            		bufferWritter.close();
 				            		break;
 				            	}
-				            	 try { 	
+				            	 try {
 						                Thread.sleep(1000);                 //1000 milliseconds is one second.
 						            } catch(InterruptedException ex) {
 						                Thread.currentThread().interrupt();
 						            }
 				            }
-				            
+
 			            }
 			            catch(IOException ex) { //for creating a file
 			            	System.out.println(ex);
@@ -215,23 +233,28 @@ public class ExperimentForm extends JFrame implements ActionListener {
 			            serialPort.closePort();//Close serial port
 			            //System.out.println("Intensity sent to SerialPort: " + intensity);
 			            //System.out.println("Mode sent to SerialPort: " + chosenMode);
-			            
+
 			        }
 			        catch (SerialPortException ex) {
 			            System.out.println(ex);
 			        }
 
 			}
-			
+
 			else if(startButton.getText().equals("Stop Run"))
 			{
 				startButton.setText("Start Run");
-				modeField.setText("");
-				softHardField.setText("");
-				TrialIdField.setText("");
+				//modeField.setText("");
+				//softHardField.setText("");
+				//TrialIdField.setText("");
 				startButton.setToolTipText("Click to Start the Run");
 			}
-		}	
+		}
+	}
+
+	public static String combine_into_csv(String[] info) {
+		String combined = "" + info[0] + "," + info[1] + "," + info[2];
+		return combined;
 	}
 
 	public static void main(String[] args) {
@@ -251,7 +274,7 @@ public class ExperimentForm extends JFrame implements ActionListener {
 		for (int i = 0; i < portNames.length; i++){
 		    System.out.println(portNames[i]);
 		} */
-		
+
 		/*
 		try {
             serialPort.openPort();//Open serial port
@@ -263,6 +286,6 @@ public class ExperimentForm extends JFrame implements ActionListener {
             System.out.println(ex);
         }
 		*/
-		new ExperimentForm(); 	
+		new ExperimentForm();
 	}
 }
