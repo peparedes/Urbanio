@@ -1,0 +1,2 @@
+delete sPort
+clear sPort

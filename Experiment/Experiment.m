@@ -1,0 +1,1146 @@
+function varargout = Experiment(varargin)
+% EXPERIMENT MATLAB code for Experiment.fig
+%      EXPERIMENT, by itself, creates a new EXPERIMENT or raises the existing
+%      singleton*.
+%
+%      H = EXPERIMENT returns the handle to a new EXPERIMENT or the handle to
+%      the existing singleton*.
+%
+%      EXPERIMENT('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in EXPERIMENT.M with the given input arguments.
+%
+%      EXPERIMENT('Property','Value',...) creates a new EXPERIMENT or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before Experiment_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to Experiment_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help Experiment
+
+% Last Modified by GUIDE v2.5 23-Jul-2015 19:30:34
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @Experiment_OpeningFcn, ...
+                   'gui_OutputFcn',  @Experiment_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before Experiment is made visible.
+function Experiment_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to Experiment (see VARARGIN)
+
+% Choose default command line output for Experiment
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes Experiment wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = Experiment_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
+
+
+
+function edit1_Callback(hObject, eventdata, ~)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton1.
+function pushbutton1_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+userID=get(handles.edit1,'String');
+
+sPort=serial('COM8');
+set(sPort,'BaudRate',115200);
+setappdata(handles.figure1,'serialPort',sPort);
+
+if(isempty(userID))     %Chequeamos si no esta en blanco el campo
+    set(handles.text11,'String','Subject ID invalid!');
+    set(handles.text11,'visible','on');
+    pause(1);
+    set(handles.text11,'visible','off');   
+else   %
+    set(handles.text1,'Enable','on');
+    set(handles.text5,'Enable','on');
+    set(handles.text5,'String',userID);
+    set(handles.text4,'Enable','on');
+    set(handles.text8,'Enable','on');
+    set(handles.text8,'ForegroundColor',[1 0 0]);
+    set(handles.text8,'String','IDLE');
+    set(handles.pushbutton2,'Visible','on');
+    set(handles.pushbutton2,'Enable','on');
+    set(handles.text11,'String','');
+    set(handles.pushbutton1,'Visible','off');
+    set(handles.text9,'Visible','off');
+    set(handles.edit1,'Visible','off');
+    set(handles.text4,'Value',1);
+    set(handles.text8,'Value',0); %Este define la posicion en la que se quedo
+    set(handles.uipanel5,'Visible','on');
+    set(handles.pushbutton2,'String','GO');
+    %Revisamos si existe un archivo de log con pruebas anteriores. Si no
+    %existe creamos uno
+    set(handles.text5,'UserData',({'0 (Test Run)','Before+Soft','During+Soft','After+Soft','Random+Soft','Before+Hard','During+Hard','After+Hard','Random+Hard','Nothing',''}));
+    name=strcat(get(handles.text5,'String'),'_log.txt');
+    names=get(handles.text5,'UserData');
+    if(exist(name))
+        data1=load(name)
+        
+        %Revisamos cual fue la ultima condicion
+        for i=0:9
+            if(data1(2,i+1)==0)
+                break;
+            else
+                set(handles.text8,'Value',get(handles.text8,'Value')+1) 
+                set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/9',{'] '},names{1,data1(1,i+1)+1}))
+            end
+        end
+        
+    else
+        data=1:9;
+        data1(1,:)=[0 data(randperm(length(data)))];
+        %data1(1,:)=[8 8 8 8 8 8 8 8 8 8];
+        data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
+        save(name,'data1','-ascii');
+    end
+    
+    set(handles.text9,'UserData',data1);
+    if(get(handles.text8,'Value')==0)
+        set(handles.text7,'String','1/1');
+    else
+        set(handles.text7,'String','1/2');
+    end
+    if((get(handles.text8,'Value')+1)<11)
+        data1(1,get(handles.text8,'Value')+1)
+        set(handles.text6,'String',names{1,data1(1,get(handles.text8,'Value')+1)+1});
+    else
+        set(handles.text8,'Value',get(handles.text8,'Value')+1)
+        set(handles.pushbutton2,'Enable','on');
+         set(handles.text1,'Enable','off');
+         set(handles.text2,'Enable','off');
+         set(handles.text3,'Enable','off');
+         set(handles.text4,'Enable','off');
+         set(handles.text5,'Enable','off');
+         set(handles.text6,'Enable','off');
+         set(handles.text7,'Enable','off');
+         set(handles.text8,'Enable','off');  
+         set(handles.pushbutton2,'String','NEXT');
+         set(handles.text11,'Visible','on');
+         set(handles.text11,'String','The test has been completed for this user!');
+    end
+    get(handles.text8,'Value')
+end
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if((get(handles.text8,'Value')+1)>11)
+         set(handles.text5,'String',' ');
+         set(handles.text6,'String',' ');
+         set(handles.text7,'String',' ');
+         set(handles.text8,'String','OFF');
+         set(handles.pushbutton1,'Visible','on');
+         set(handles.text9,'Visible','on');
+         set(handles.edit1,'String','');
+         set(handles.edit1,'Visible','on');
+         set(handles.text8,'Value',0); 
+         set(handles.pushbutton2,'visible','off');
+         set(handles.uipanel5,'Visible','off');
+         set(handles.text13,'String','');
+         set(handles.text11,'String','');
+         return
+end
+         
+myDebug=0;
+orden1=get(handles.text9,'UserData');
+orden=orden1(1,:);
+%get(handles.text9,'UserData')
+names=get(handles.text5,'UserData');
+status=orden(get(handles.text8,'Value')+1);
+
+% ---- Abrimos el puerto serial -----------------------------------
+if(myDebug==0)
+sPort=getappdata(handles.figure1,'serialPort');
+if(strcmp(sPort.status,'closed'))
+    fopen(sPort);  
+    Port.ReadAsyncMode = 'manual';
+end
+readasync(sPort);
+end
+
+% ---- Abrimos el archivo para escritura --------------------------
+name=strcat(get(handles.text5,'String'),'_','Test',num2str(status),'_',num2str(get(handles.text4,'Value')),'.txt');
+miArchivo=fopen(name,'wt');
+
+    switch(status)
+     case 0  % Turn on the lights
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[S/H] ---
+        try
+            fprintf(sPort,'6');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end 
+        end
+     
+        set(handles.text8,'Value',get(handles.text8,'Value')+1);
+        set(handles.text7,'String','1/2');
+     case 1
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[S/H] ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+       
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end 
+        end
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+         
+         
+     case 2
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'2');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end  
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+        
+     case 3
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end  
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 4
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'8');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        %set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end    
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 5
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'2');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        %set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!'); 
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end  
+        end
+        
+          if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 6
+          set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'2');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'2');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+         %set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!'); 
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end  
+        end
+        
+           if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 7
+          set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'2');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        % set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end    
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 8
+          set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'7');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        %set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!'); 
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end   
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end
+     case 9
+        set(handles.pushbutton2,'Enable','off'); 
+        set(handles.text2,'Enable','on');
+        set(handles.text3,'Enable','on');
+        set(handles.text6,'Enable','on');
+        set(handles.text7,'Enable','on');
+        set(handles.text8,'ForegroundColor',[0 0.8 0]);
+        set(handles.text8,'String','ACTIVE'); 
+        set(handles.text11,'ForegroundColor',[0 0 0]);
+        set(handles.text11,'String','Ready...');
+        set(handles.text11,'Visible','on');
+        
+        if(myDebug==0)
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'2');
+        end
+        
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % --- Send command to iCase[S/H] ---
+        try
+            fprintf(sPort,'3');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+       % --- Send command to iTimeCase[B/D/A/R] ---
+        try
+            fprintf(sPort,'5');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort);
+        end
+        set(handles.text11,'String',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        try
+            data = fscanf(sPort);
+        end
+
+        % --- Send command to begin ---
+        try
+            fprintf(sPort,'1');
+        end 
+        pause(0.1);
+        try
+            data = fscanf(sPort); 
+        end
+        %set(handles.text11,'String','Waiting for the final sensors...');
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        set(handles.text11,'String','Go!');
+        % Wait for 'End' code    
+        while(~strcmp(data(2:4),'End'))
+                nroDatos=sPort.BytesAvailable;
+                if(nroDatos>2)
+                     try
+                         data = fscanf(sPort);   
+                     end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                end
+        end  
+        end
+        
+         if(get(handles.text4,'Value')==1)
+            set(handles.text4,'Value',2);
+            set(handles.text7,'String','2/2');
+         else
+            set(handles.text4,'Value',1);
+            set(handles.text8,'Value',get(handles.text8,'Value')+1);
+            set(handles.text7,'String','1/2');
+         end     
+    end
+    get(handles.text8,'Value')
+    if((get(handles.text8,'Value')+1)<11)
+        set(handles.pushbutton2,'Enable','on');
+        set(handles.text2,'Enable','off');
+        set(handles.text3,'Enable','off');
+        status=orden(get(handles.text8,'Value')+1);
+        set(handles.text6,'String',names{1,status+1});
+        set(handles.text6,'Enable','off');
+        set(handles.text7,'Enable','off');
+        set(handles.text8,'ForegroundColor',[1 0 0]);
+        set(handles.text8,'String','IDLE');
+        set(handles.text11,'String','Press button to start..');
+        
+        if(get(handles.text4,'Value')==1)
+            get(handles.text8,'Value')
+            orden1(2,get(handles.text8,'Value'))=1;
+            set(handles.text9,'UserData',orden1);
+            name=strcat(get(handles.text5,'String'),'_log.txt');
+            save(name,'orden1','-ascii');
+            set(handles.text13,'String',strcat(get(handles.text13,'String')...
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/9',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+        end
+    elseif((get(handles.text8,'Value')+1)==11)     
+         orden1(2,10)=1;
+         if(get(handles.text4,'Value')==1)
+            get(handles.text8,'Value')
+            orden1(2,get(handles.text8,'Value'))=1;
+            set(handles.text9,'UserData',orden1);
+            name=strcat(get(handles.text5,'String'),'_log.txt');
+            save(name,'orden1','-ascii');
+            set(handles.text13,'String',strcat(get(handles.text13,'String')...
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/9',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+        end
+         set(handles.text13,'String',strcat(get(handles.text13,'String')...
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/9',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+         set(handles.pushbutton2,'Enable','on');
+         set(handles.text1,'Enable','off');
+         set(handles.text2,'Enable','off');
+         set(handles.text3,'Enable','off');
+         set(handles.text4,'Enable','off');
+         set(handles.text5,'Enable','off');
+         set(handles.text6,'Enable','off');
+         set(handles.text7,'Enable','off');
+         set(handles.text8,'Enable','off');  
+         set(handles.pushbutton2,'String','NEXT');
+         set(handles.text8,'Value',get(handles.text8,'Value')+1);
+         
+         %Creamos la version final del archivo con los datos del usuario
+         for i=1:19
+             
+         end
+         
+         
+         %**************************************************************
+             
+    end
+    
+if(myDebug==0)
+    fclose(sPort);
+end
+fclose(miArchivo);
+
+
+% --- Executes during object creation, after setting all properties.
+function figure1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+disp('llamando a create..')
+delete(instrfindall)
+
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbutton2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function uipanel2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uipanel2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+
+% --- Executes during object deletion, before destroying properties.
+function uipanel2_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to uipanel2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sPort=guidata(handles.figure1);
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbutton1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in checkbox1.
+function checkbox1_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox1
