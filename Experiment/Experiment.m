@@ -149,8 +149,19 @@ else   %
         end
         
     else
-        data=1:9;
-        data1(1,:)=[0 data(randperm(length(data)))];
+          m=load('order.txt');
+          [maxim,pos]=max(m(:,1));
+          data=m(pos,2:10);
+          m(pos,1)=0;
+          pos=pos+1;
+          if(pos>18)
+              pos=1;
+          end
+          m(pos,1)=1;
+          save('order.txt','m','-ascii');
+        
+%         data=1:9;
+        data1(1,:)=[0 data];
         %data1(1,:)=[8 8 8 8 8 8 8 8 8 8];
         data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
         save(name,'data1','-ascii');
