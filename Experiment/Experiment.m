@@ -22,7 +22,7 @@ function varargout = Experiment(varargin)
 
 % Edit the above text to modify the response to help Experiment
 
-% Last Modified by GUIDE v2.5 23-Jul-2015 19:30:34
+% Last Modified by GUIDE v2.5 30-Jul-2015 13:43:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -121,6 +121,7 @@ else   %
     set(handles.text8,'ForegroundColor',[1 0 0]);
     set(handles.text8,'String','IDLE');
     set(handles.pushbutton2,'Visible','on');
+    set(handles.pushbutton3,'Visible','on');
     set(handles.pushbutton2,'Enable','on');
     set(handles.text11,'String','');
     set(handles.pushbutton1,'Visible','off');
@@ -210,6 +211,7 @@ if((get(handles.text8,'Value')+1)>11)
          set(handles.edit1,'Visible','on');
          set(handles.text8,'Value',0); 
          set(handles.pushbutton2,'visible','off');
+         set(handles.pushbutton3,'Visible','off');
          set(handles.uipanel5,'Visible','off');
          set(handles.text13,'String','');
          set(handles.text11,'String','');
@@ -1155,3 +1157,27 @@ function checkbox1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkbox1
+
+
+% --- Executes on button press in pushbutton3.
+function pushbutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if(get(handles.text4,'Value')==2)
+    set(handles.text4,'Value',1);
+    set(handles.text7,'String','1/2');
+elseif(get(handles.text4,'Value')==1)
+    set(handles.text4,'Value',2);
+    set(handles.text7,'String','2/2');
+    set(handles.text8,'Value',get(handles.text8,'Value')-1);
+    orden1=get(handles.text9,'UserData');
+    orden=orden1(1,:);
+    %get(handles.text9,'UserData')
+    names=get(handles.text5,'UserData');
+    status=orden(get(handles.text8,'Value')+1);
+    set(handles.text6,'String',names{1,status+1}); 
+end
+
+
+
