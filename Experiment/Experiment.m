@@ -22,7 +22,7 @@ function varargout = Experiment(varargin)
 
 % Edit the above text to modify the response to help Experiment
 
-% Last Modified by GUIDE v2.5 30-Jul-2015 13:43:27
+% Last Modified by GUIDE v2.5 30-Jul-2015 18:36:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,7 +103,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 
-sPort=serial('COM8');
+sPort=serial('/dev/tty.usbmodemfa142');%COM8');
 set(sPort,'BaudRate',115200);
 setappdata(handles.figure1,'serialPort',sPort);
 
@@ -1108,6 +1108,7 @@ if(myDebug==0)
     fclose(sPort);
 end
 fclose(miArchivo);
+set(handles.pushbutton3,'Enable','on');
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1178,6 +1179,4 @@ elseif(get(handles.text4,'Value')==1)
     status=orden(get(handles.text8,'Value')+1);
     set(handles.text6,'String',names{1,status+1}); 
 end
-
-
-
+set(handles.pushbutton3,'Enable','off');
