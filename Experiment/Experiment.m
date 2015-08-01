@@ -103,7 +103,8 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 
-sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+sPort=serial('COM10');%COM8');
 set(sPort,'BaudRate',115200);
 setappdata(handles.figure1,'serialPort',sPort);
 
@@ -163,11 +164,13 @@ else   %
         
 %         data=1:9;
         data1(1,:)=[0 data];
-        %data1(1,:)=[8 8 8 8 8 8 8 8 8 8];
+        %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
         data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
         save(name,'data1','-ascii');
     end
-    
+    set(handles.text11,'ForegroundColor',[0 0 0]);
+    set(handles.text11,'Visible','on');
+    set(handles.text11,'String','Press button to start..');
     set(handles.text9,'UserData',data1);
     if(get(handles.text8,'Value')==0)
         set(handles.text7,'String','1/1');
@@ -238,7 +241,7 @@ end
 % ---- Abrimos el archivo para escritura --------------------------
 name=strcat(get(handles.text5,'String'),'_','Test',num2str(status),'_',num2str(get(handles.text4,'Value')),'.txt');
 miArchivo=fopen(name,'wt');
-
+data='';
     switch(status)
      case 0  % Turn on the lights
         set(handles.pushbutton2,'Enable','off'); 
@@ -249,8 +252,10 @@ miArchivo=fopen(name,'wt');
         set(handles.text8,'ForegroundColor',[0 0.8 0]);
         set(handles.text8,'String','ACTIVE'); 
         set(handles.text11,'ForegroundColor',[0 0 0]);
-        set(handles.text11,'String','Ready...');
+        
+        set(handles.text11,'String','Please wait. Checking for sensors....');
         set(handles.text11,'Visible','on');
+        drawnow;
         
         if(myDebug==0)
         % --- Send command to begin ---
@@ -258,63 +263,94 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'1');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'3');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
-       % --- Send command to iTimeCase[S/H] ---
+       % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'6');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String','Waiting for the final sensors...');
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end 
+                end 
+           miEvent=strtok(data,',');
+        end
         end
      
+        
         set(handles.text8,'Value',get(handles.text8,'Value')+1);
         set(handles.text7,'String','1/2');
+     
      case 1
         set(handles.pushbutton2,'Enable','off'); 
         set(handles.text2,'Enable','on');
@@ -327,67 +363,96 @@ miArchivo=fopen(name,'wt');
         set(handles.text11,'String','Ready...');
         set(handles.text11,'Visible','on');
         
-        if(myDebug==0)
+         if(myDebug==0)
         % --- Send command to begin ---
         try
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'1');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
-       % --- Send command to iTimeCase[S/H] ---
+       % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-       
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
         
         % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end 
+                end 
+           miEvent=strtok(data,',');
         end
+         end
+        
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
             set(handles.text7,'String','2/2');
@@ -416,60 +481,90 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'1');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'2');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
         
         % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end  
+                end 
+           miEvent=strtok(data,',');
         end
+         end
+        
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -492,65 +587,95 @@ miArchivo=fopen(name,'wt');
         set(handles.text11,'String','Ready...');
         set(handles.text11,'Visible','on');
         
-        if(myDebug==0)
+         if(myDebug==0)
         % --- Send command to begin ---
         try
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'1');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'3');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end  
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -572,66 +697,95 @@ miArchivo=fopen(name,'wt');
         set(handles.text11,'String','Ready...');
         set(handles.text11,'Visible','on');
         
-        if(myDebug==0)
+         if(myDebug==0)
         % --- Send command to begin ---
         try
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
-            fprintf(sPort,'3');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+            fprintf(sPort,'1');
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'8');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        %set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end    
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -653,66 +807,96 @@ miArchivo=fopen(name,'wt');
         set(handles.text11,'String','Ready...');
         set(handles.text11,'Visible','on');
         
-        if(myDebug==0)
+         if(myDebug==0)
         % --- Send command to begin ---
         try
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'2');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        %set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!'); 
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end  
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
+        
         
           if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -740,60 +924,90 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'2');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'2');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-         %set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!'); 
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end  
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
+        
         
            if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -821,60 +1035,90 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'2');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'3');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        % set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end    
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
+        
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -902,60 +1146,90 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
-            fprintf(sPort,'3');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+            fprintf(sPort,'2');
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'7');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        %set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!'); 
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end   
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
+        
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -983,60 +1257,91 @@ miArchivo=fopen(name,'wt');
             fprintf(sPort,'2');
         end
         
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Timer timeStamp'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        %set(handles.text11,'String',data);
+        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
             fprintf(sPort,'3');
-        end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
         end
-        set(handles.text11,'String',data);
+        
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCase[S|H]'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+        
+        
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
             fprintf(sPort,'5');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort);
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'Sensors states:'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);  
+                     end
+                end 
+           miEvent=strtok(data,',');
         end
-        set(handles.text11,'String',data);
         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        try
-            data = fscanf(sPort);
-        end
 
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
         end 
-        pause(0.1);
-        try
-            data = fscanf(sPort); 
-        end
-        %set(handles.text11,'String','Waiting for the final sensors...');
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        set(handles.text11,'String','Go!');
-        % Wait for 'End' code    
-        while(~strcmp(data(2:4),'End'))
-                nroDatos=sPort.BytesAvailable;
-                if(nroDatos>2)
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'iCommand'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
                      try
-                         data = fscanf(sPort);   
+                         data = fscanf(sPort);  
                      end
-                    %set(handles.text11,'String',data);
-                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                end
-        end  
+                end 
+           miEvent=strtok(data,',');
         end
+        set(handles.text11,'String','Sensors are ok. GO!');
+        drawnow;
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
+        % Wait for 'End' code    
+        miEvent='';
+        data='';
+        while(~strcmp(miEvent,'End'))  
+           nroDatos=sPort.BytesAvailable;
+                if(nroDatos>5)
+                     try
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                     end
+                end 
+           miEvent=strtok(data,',');
+        end
+         end
+        
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -1090,7 +1395,8 @@ miArchivo=fopen(name,'wt');
          set(handles.text5,'Enable','off');
          set(handles.text6,'Enable','off');
          set(handles.text7,'Enable','off');
-         set(handles.text8,'Enable','off');  
+         set(handles.text8,'Enable','off'); 
+         set(handles.text11,'String','Test was finished');
          set(handles.pushbutton2,'String','NEXT');
          set(handles.text8,'Value',get(handles.text8,'Value')+1);
          
