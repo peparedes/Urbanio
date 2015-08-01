@@ -104,7 +104,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 userID=get(handles.edit1,'String');
 
 %sPort=serial('/dev/tty.usbmodemfa142');%COM8');
-sPort=serial('COM10');%COM8');
+sPort=serial('COM8');%COM8');
 set(sPort,'BaudRate',115200);
 setappdata(handles.figure1,'serialPort',sPort);
 
@@ -162,7 +162,7 @@ else   %
           m(pos,1)=1;
           save('order.txt','m','-ascii');
         
-%         data=1:9;
+        %data=1:9;
         data1(1,:)=[0 data];
         %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
         data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
@@ -269,13 +269,13 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort); 
                      end
                 end 
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -307,11 +307,12 @@ data='';
                 if(nroDatos>5)
                      try
                          data = fscanf(sPort);  
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
@@ -381,7 +382,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -412,13 +413,14 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort); 
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-
+        
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
@@ -493,7 +495,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -524,12 +526,13 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort); 
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+       
 
         % --- Send command to begin ---
         try
@@ -605,7 +608,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -637,11 +640,12 @@ data='';
                 if(nroDatos>5)
                      try
                          data = fscanf(sPort);  
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
@@ -715,11 +719,11 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
-            fprintf(sPort,'1');
+            fprintf(sPort,'3');
         end
         
         miEvent='';
@@ -747,11 +751,12 @@ data='';
                 if(nroDatos>5)
                      try
                          data = fscanf(sPort);  
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
@@ -825,7 +830,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -856,12 +861,13 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
@@ -936,7 +942,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -968,12 +974,12 @@ data='';
                 if(nroDatos>5)
                      try
                          data = fscanf(sPort);  
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-
+       
         % --- Send command to begin ---
         try
             fprintf(sPort,'1');
@@ -1047,7 +1053,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -1078,12 +1084,13 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort); 
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+       
 
         % --- Send command to begin ---
         try
@@ -1158,11 +1165,11 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
-            fprintf(sPort,'2');
+            fprintf(sPort,'3');
         end
         
         miEvent='';
@@ -1189,12 +1196,13 @@ data='';
            nroDatos=sPort.BytesAvailable;
                 if(nroDatos>5)
                      try
-                         data = fscanf(sPort);  
+                         data = fscanf(sPort);
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
@@ -1269,7 +1277,7 @@ data='';
            miEvent=strtok(data,',');
         end
         %set(handles.text11,'String',data);
-        %fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
         
         % --- Send command to iCase[S/H] ---
         try
@@ -1302,11 +1310,12 @@ data='';
                 if(nroDatos>5)
                      try
                          data = fscanf(sPort);  
+                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
                      end
                 end 
            miEvent=strtok(data,',');
         end
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+        
 
         % --- Send command to begin ---
         try
