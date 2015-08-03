@@ -103,8 +103,8 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 
-%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
-sPort=serial('COM8');%COM8');
+sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+%sPort=serial('COM8');%COM8');
 set(sPort,'BaudRate',115200);
 setappdata(handles.figure1,'serialPort',sPort);
 
@@ -137,36 +137,43 @@ else   %
     set(handles.text5,'UserData',({'0 (Test Run)','Before+Soft','During+Soft','After+Soft','Random+Soft','Before+Hard','During+Hard','After+Hard','Random+Hard','Nothing',''}));
     name=strcat(get(handles.text5,'String'),'_log.txt');
     names=get(handles.text5,'UserData');
-    if(exist(name))
-        data1=load(name)
-        
-        %Revisamos cual fue la ultima condicion
-        for i=0:9
-            if(data1(2,i+1)==0)
-                break;
-            else
-                set(handles.text8,'Value',get(handles.text8,'Value')+1) 
-                set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/9',{'] '},names{1,data1(1,i+1)+1}))
-            end
-        end
-        
-    else
-          m=load('order.txt');
-          [maxim,pos]=max(m(:,1));
-          data=m(pos,2:10);
-          m(pos,1)=0;
-          pos=pos+1;
-          if(pos>18)
-              pos=1;
-          end
-          m(pos,1)=1;
-          save('order.txt','m','-ascii');
-        
-        %data=1:9;
+    
+    if(strcmp(upper(userID),'TEST'))
+        data=1:9;
         data1(1,:)=[0 data];
-        %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
         data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
-        save(name,'data1','-ascii');
+    else 
+        if(exist(name))
+            data1=load(name)
+
+            %Revisamos cual fue la ultima condicion
+            for i=0:9
+                if(data1(2,i+1)==0)
+                    break;
+                else
+                    set(handles.text8,'Value',get(handles.text8,'Value')+1) 
+                    set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/9',{'] '},names{1,data1(1,i+1)+1}))
+                end
+            end
+
+        else
+              m=load('order.txt');
+              [maxim,pos]=max(m(:,1));
+              data=m(pos,2:10);
+              m(pos,1)=0;
+              pos=pos+1;
+              if(pos>18)
+                  pos=1;
+              end
+              m(pos,1)=1;
+              save('order.txt','m','-ascii');
+
+            %data=1:9;
+            data1(1,:)=[0 data];
+            %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
+            data1(2,:)=[0 0 0 0 0 0 0 0 0 0];
+            save(name,'data1','-ascii');
+        end
     end
     set(handles.text11,'ForegroundColor',[0 0 0]);
     set(handles.text11,'Visible','on');
@@ -195,7 +202,7 @@ else   %
          set(handles.text11,'Visible','on');
          set(handles.text11,'String','The test has been completed for this user!');
     end
-    get(handles.text8,'Value')
+    get(handles.text8,'Value');
 end
 
 % --- Executes on button press in pushbutton2.
@@ -203,6 +210,8 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+%Verificamos que si el usuario tiene mas tests pendientes
 if((get(handles.text8,'Value')+1)>11)
          set(handles.text5,'String',' ');
          set(handles.text6,'String',' ');
@@ -220,7 +229,8 @@ if((get(handles.text8,'Value')+1)>11)
          set(handles.text11,'String','');
          return
 end
-         
+
+% Si el usuario tiene mas test pendientes, cargamos la secuencia -----
 myDebug=0;
 orden1=get(handles.text9,'UserData');
 orden=orden1(1,:);
@@ -230,15 +240,15 @@ status=orden(get(handles.text8,'Value')+1);
 
 % ---- Abrimos el puerto serial -----------------------------------
 if(myDebug==0)
-sPort=getappdata(handles.figure1,'serialPort');
-if(strcmp(sPort.status,'closed'))
-    fopen(sPort);  
-    Port.ReadAsyncMode = 'manual';
-end
-readasync(sPort);
+    sPort=getappdata(handles.figure1,'serialPort');
+    if(strcmp(sPort.status,'closed'))
+        fopen(sPort);  
+        Port.ReadAsyncMode = 'manual';
+    end
+    readasync(sPort);
 end
 
-% ---- Abrimos el archivo para escritura --------------------------
+% ---- Abrimos el archivo de datos del usuario para escritura -------------
 name=strcat(get(handles.text5,'String'),'_','Test',num2str(status),'_',num2str(get(handles.text4,'Value')),'.txt');
 miArchivo=fopen(name,'wt');
 data='';
@@ -415,7 +425,6 @@ data='';
                      try
                          data = fscanf(sPort); 
                          fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-
                      end
                 end 
            miEvent=strtok(data,',');
@@ -1361,7 +1370,7 @@ data='';
             set(handles.text7,'String','1/2');
          end     
     end
-    get(handles.text8,'Value')
+    get(handles.text8,'Value');
     if((get(handles.text8,'Value')+1)<11)
         set(handles.pushbutton2,'Enable','on');
         set(handles.text2,'Enable','off');
@@ -1375,7 +1384,7 @@ data='';
         set(handles.text11,'String','Press button to start..');
         
         if(get(handles.text4,'Value')==1)
-            get(handles.text8,'Value')
+            get(handles.text8,'Value');
             orden1(2,get(handles.text8,'Value'))=1;
             set(handles.text9,'UserData',orden1);
             name=strcat(get(handles.text5,'String'),'_log.txt');
@@ -1386,7 +1395,7 @@ data='';
     elseif((get(handles.text8,'Value')+1)==11)     
          orden1(2,10)=1;
          if(get(handles.text4,'Value')==1)
-            get(handles.text8,'Value')
+            get(handles.text8,'Value');
             orden1(2,get(handles.text8,'Value'))=1;
             set(handles.text9,'UserData',orden1);
             name=strcat(get(handles.text5,'String'),'_log.txt');
