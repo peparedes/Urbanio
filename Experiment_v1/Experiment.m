@@ -210,7 +210,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+userID=get(handles.edit1,'String');
 %Verificamos que si el usuario tiene mas tests pendientes
 if((get(handles.text8,'Value')+1)>12)
          set(handles.text5,'String',' ');
@@ -1474,7 +1474,6 @@ data='';
            miEvent=strtok(data,',');
         end
         end
-     
         
          if(get(handles.text4,'Value')==1)
             set(handles.text4,'Value',2);
@@ -1484,6 +1483,13 @@ data='';
             set(handles.text8,'Value',get(handles.text8,'Value')+1);
             set(handles.text7,'String','1/2');
          end
+         
+    end
+    
+    if(strcmp(upper(userID),'TEST'))
+        set(handles.text4,'Value',1);
+        set(handles.text8,'Value',get(handles.text8,'Value')+1);
+        set(handles.text7,'String','1/2');
     end
     get(handles.text8,'Value');
     if((get(handles.text8,'Value')+1)<12)
