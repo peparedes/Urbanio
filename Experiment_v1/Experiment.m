@@ -104,8 +104,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 userID=get(handles.edit1,'String');
 
 %sPort=serial('/dev/tty.usbmodemfa142');%COM8');
-sPort=serial('COM8');%COM8');
+delete(instrfindall);
+sPort=serial('COM7');%COM8');
+fclose(sPort);
 set(sPort,'BaudRate',115200);
+
 
 myDebug=0;
 % ---- Abrimos el puerto serial -----------------------------------
@@ -252,7 +255,7 @@ if((get(handles.text8,'Value')+1)>12)
 end
 
 % Si el usuario tiene mas test pendientes, cargamos la secuencia -----
-myDebug=1;
+myDebug=0;
 orden1=get(handles.text9,'UserData');
 orden=orden1(1,:);
 %get(handles.text9,'UserData')
@@ -1564,8 +1567,6 @@ data='';
          for i=1:19
              
          end
-         
-         
          %**************************************************************
              
     end
@@ -1583,7 +1584,7 @@ function figure1_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 disp('llamando a create..')
-delete(instrfindall)
+delete(instrfindall);
 
 
 
