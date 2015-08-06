@@ -22,7 +22,7 @@ function varargout = Experiment(varargin)
 
 % Edit the above text to modify the response to help Experiment
 
-% Last Modified by GUIDE v2.5 30-Jul-2015 18:36:33
+% Last Modified by GUIDE v2.5 05-Aug-2015 19:44:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,10 +103,30 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 
-sPort=serial('/dev/tty.usbmodemfa142');%COM8');
-%sPort=serial('COM8');%COM8');
+%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+sPort=serial('COM8');%COM8');
 set(sPort,'BaudRate',115200);
-setappdata(handles.figure1,'serialPort',sPort);
+
+myDebug=0;
+% ---- Abrimos el puerto serial -----------------------------------
+try
+    if(myDebug==0)
+        if(strcmp(sPort.status,'closed'))
+            fopen(sPort);  
+            Port.ReadAsyncMode = 'manual';
+        end
+        readasync(sPort);
+    end
+    setappdata(handles.figure1,'serialPort',sPort);
+catch
+    if(strcmp(sPort.status,'closed'))
+        set(handles.text11,'String','Invalid serial port!');
+        set(handles.text11,'visible','on');
+        pause(1);
+        set(handles.text11,'visible','off');
+        return;
+    end
+end
 
 if(isempty(userID))     %Chequeamos si no esta en blanco el campo
     set(handles.text11,'String','Subject ID invalid!');
@@ -211,6 +231,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
+sPort=getappdata(handles.figure1,'serialPort');
 %Verificamos que si el usuario tiene mas tests pendientes
 if((get(handles.text8,'Value')+1)>12)
          set(handles.text5,'String',' ');
@@ -238,15 +259,15 @@ orden=orden1(1,:);
 names=get(handles.text5,'UserData');
 status=orden(get(handles.text8,'Value')+1);
 
-% ---- Abrimos el puerto serial -----------------------------------
-if(myDebug==0)
-    sPort=getappdata(handles.figure1,'serialPort');
-    if(strcmp(sPort.status,'closed'))
-        fopen(sPort);  
-        Port.ReadAsyncMode = 'manual';
-    end
-    readasync(sPort);
-end
+% % ---- Abrimos el puerto serial -----------------------------------
+% if(myDebug==0)
+%     sPort=getappdata(handles.figure1,'serialPort');
+%     if(strcmp(sPort.status,'closed'))
+%         fopen(sPort);  
+%         Port.ReadAsyncMode = 'manual';
+%     end
+%     readasync(sPort);
+% end
 
 % ---- Abrimos el archivo de datos del usuario para escritura -------------
 name=strcat(get(handles.text5,'String'),'_','Test',num2str(status),'_',num2str(get(handles.text4,'Value')),'.txt');
@@ -1549,9 +1570,9 @@ data='';
              
     end
     
-if(myDebug==0)
-    fclose(sPort);
-end
+% if(myDebug==0)
+%     fclose(sPort);
+% end
 fclose(miArchivo);
 set(handles.pushbutton3,'Enable','on');
 
@@ -1625,3 +1646,14 @@ elseif(get(handles.text4,'Value')==1)
     set(handles.text6,'String',names{1,status+1}); 
 end
 set(handles.pushbutton3,'Enable','off');
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+delete(instrfindall)
+delete(hObject);
