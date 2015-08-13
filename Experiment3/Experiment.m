@@ -102,15 +102,15 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
-
-%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
 delete(instrfindall);
+%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+
 sPort=serial('COM7');%COM8');
 fclose(sPort);
 set(sPort,'BaudRate',115200);
 
 
-myDebug=1;
+myDebug=0;
 % ---- Abrimos el puerto serial -----------------------------------
 try
     if(myDebug==0)
@@ -157,8 +157,8 @@ else   %
     set(handles.pushbutton2,'String','GO');
     %Revisamos si existe un archivo de log con pruebas anteriores. Si no
     %existe creamos uno
-    set(handles.text5,'UserData',({'0 (Test Run)','1 step before','3 steps before',...
-        '6 steps before','1 light',' 2 lights','3 lights','0% base','5% base','20% base','waves',''}));
+    set(handles.text5,'UserData',({'0 (Test Run)','3Stp/1Lgt/0Prct','6Stp/1Lgt/0Prct',...
+        '3Stp/2Lgt/0Prct','6Stp/2Lgt/0Prct','3Stp/1Lgt/5Prct','6Stp/1Lgt/5Prct','3Stp/2Lgt/5Prct','6Stp/2Lgt/5Prct','','',''}));
     name=strcat(get(handles.text5,'String'),'_log.txt');
     names=get(handles.text5,'UserData');
     
@@ -177,7 +177,7 @@ else   %
                     break;
                 else
                     set(handles.text8,'Value',get(handles.text8,'Value')+1) 
-                    set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/',num2str(TotalTest),{'] '},names{1,data1(1,i+1)+1}))
+                    set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/',num2str(TotalTest-1),{'] '},names{1,data1(1,i+1)+1}))
                 end
             end
 
@@ -240,7 +240,7 @@ sPort=getappdata(handles.figure1,'serialPort');
 
 
 % Si el usuario tiene mas test pendientes, cargamos la secuencia -----
-myDebug=1;
+myDebug=0;
 orden1=get(handles.text9,'UserData');
 orden=orden1(1,:);
 TotalTest=size(orden1,2);
@@ -1602,7 +1602,7 @@ data='';
             name=strcat(get(handles.text5,'String'),'_log.txt');
             save(name,'orden1','-ascii');
             set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest-1),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
         end
     elseif((get(handles.text8,'Value')+1)==(TotalTest+1))     
          orden1(2,(TotalTest))=1;
@@ -1613,10 +1613,10 @@ data='';
             name=strcat(get(handles.text5,'String'),'_log.txt');
             save(name,'orden1','-ascii');
             set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest-1),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
           end
          set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest-1),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
          set(handles.pushbutton2,'Enable','on');
          set(handles.text1,'Enable','off');
          set(handles.text2,'Enable','off');
