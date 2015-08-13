@@ -110,7 +110,7 @@ fclose(sPort);
 set(sPort,'BaudRate',115200);
 
 
-myDebug=0;
+myDebug=1;
 % ---- Abrimos el puerto serial -----------------------------------
 try
     if(myDebug==0)
@@ -162,10 +162,11 @@ else   %
     name=strcat(get(handles.text5,'String'),'_log.txt');
     names=get(handles.text5,'UserData');
     
+    TotalTest=8; %Numero total de casos a testear. sin el Test run 0
     if(strcmp(upper(userID),'TEST'))
-        data=1:10;
+        data=1:TotalTest;
         data1(1,:)=[0 data];
-        data1(2,:)=[0 0 0 0 0 0 0 0 0 0 0];
+        data1(2,:)=zeros(1,TotalTest+1);
     else 
         if(exist(name))
             data1=load(name)
@@ -176,17 +177,17 @@ else   %
                     break;
                 else
                     set(handles.text8,'Value',get(handles.text8,'Value')+1) 
-                    set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/10',{'] '},names{1,data1(1,i+1)+1}))
+                    set(handles.text13,'String',strcat(get(handles.text13,'String'),{'  -  '},{ '['}, num2str(i),'/',num2str(TotalTest),{'] '},names{1,data1(1,i+1)+1}))
                 end
             end
 
         else
             m=load('order.txt');
             [maxim,pos]=max(m(:,1));
-            data=m(pos,2:11);
+            data=m(pos,2:TotalTest+1);
             m(pos,1)=0;
             pos=pos+1;
-            if(pos>11)
+            if(pos>(TotalTest+1))
                 pos=1;
             end
             m(pos,1)=1;
@@ -195,7 +196,7 @@ else   %
             %data=1:9;
             data1(1,:)=[0 data];
             %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
-            data1(2,:)=[0 0 0 0 0 0 0 0 0 0 0];
+            data1(2,:)=zeros(1,TotalTest+1);
             save(name,'data1','-ascii');
         end
     end
@@ -208,7 +209,7 @@ else   %
     else
         set(handles.text7,'String','1/2');
     end
-    if((get(handles.text8,'Value')+1)<11)
+    if((get(handles.text8,'Value')+1)<(TotalTest+1))
         data1(1,get(handles.text8,'Value')+1)
         set(handles.text6,'String',names{1,data1(1,get(handles.text8,'Value')+1)+1});
     else
@@ -236,8 +237,16 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 sPort=getappdata(handles.figure1,'serialPort');
+
+
+% Si el usuario tiene mas test pendientes, cargamos la secuencia -----
+myDebug=1;
+orden1=get(handles.text9,'UserData');
+orden=orden1(1,:);
+TotalTest=size(orden1,2);
+
 %Verificamos que si el usuario tiene mas tests pendientes
-if((get(handles.text8,'Value')+1)>12)
+if((get(handles.text8,'Value')+1)>(TotalTest+1))
          set(handles.text5,'String',' ');
          set(handles.text6,'String',' ');
          set(handles.text7,'String',' ');
@@ -255,10 +264,6 @@ if((get(handles.text8,'Value')+1)>12)
          return
 end
 
-% Si el usuario tiene mas test pendientes, cargamos la secuencia -----
-myDebug=0;
-orden1=get(handles.text9,'UserData');
-orden=orden1(1,:);
 %get(handles.text9,'UserData')
 names=get(handles.text5,'UserData');
 status=orden(get(handles.text8,'Value')+1);
@@ -278,119 +283,127 @@ name=strcat(get(handles.text5,'String'),'_','Test',num2str(status),'_',num2str(g
 miArchivo=fopen(name,'wt');
 data='';
     switch(status)
-     case 0  % Test run 0
-        set(handles.pushbutton2,'Enable','off'); 
-        set(handles.text2,'Enable','on');
-        set(handles.text3,'Enable','on');
-        set(handles.text6,'Enable','on');
-        set(handles.text7,'Enable','on');
-        set(handles.text8,'ForegroundColor',[0 0.8 0]);
-        set(handles.text8,'String','ACTIVE'); 
-        set(handles.text11,'ForegroundColor',[0 0 0]);
-        
-        set(handles.text11,'String','Please wait. Checking for sensors....');
-        set(handles.text11,'Visible','on');
-        drawnow;
-        
-        if(myDebug==0)
-        % --- Send command to begin ---
-        try
-            fprintf(sPort,'1');
-        end
-        
-        miEvent='';
-        data='';
-        while(~strcmp(miEvent,'Timer timeStamp'))  
-           nroDatos=sPort.BytesAvailable;
-                if(nroDatos>5)
-                     try
-                         data = fscanf(sPort); 
-                     end
-                end 
-           miEvent=strtok(data,',');
-        end
-        %set(handles.text11,'String',data);
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        
-        % --- Send command to iCase[S/H] ---
-        try
-            fprintf(sPort,'3');
-        end
-        
-        miEvent='';
-        data='';
-        while(~strcmp(miEvent,'iCase[S|H]'))  
-           nroDatos=sPort.BytesAvailable;
-                if(nroDatos>5)
-                     try
-                         data = fscanf(sPort);  
-                     end
-                end 
-           miEvent=strtok(data,',');
-        end
-        
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        
-       % --- Send command to iTimeCase[B/D/A/R] ---
-        try
-            fprintf(sPort,':');     %Enviamos el 58
-        end 
-        miEvent='';
-        data='';
-        while(~strcmp(miEvent,'Sensors states:'))  
-           nroDatos=sPort.BytesAvailable;
-                if(nroDatos>5)
-                     try
-                         data = fscanf(sPort);  
-                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                     end
-                end 
-           miEvent=strtok(data,',');
-        end
-        
+         case 0  % Test run 0
+                set(handles.pushbutton2,'Enable','off'); 
+                set(handles.text2,'Enable','on');
+                set(handles.text3,'Enable','on');
+                set(handles.text6,'Enable','on');
+                set(handles.text7,'Enable','on');
+                set(handles.text8,'ForegroundColor',[0 0.8 0]);
+                set(handles.text8,'String','ACTIVE'); 
+                set(handles.text11,'ForegroundColor',[0 0 0]);
 
-        % --- Send command to begin ---
-        try
-            fprintf(sPort,'1');
-        end 
-        miEvent='';
-        data='';
-        while(~strcmp(miEvent,'iCommand'))  
-           nroDatos=sPort.BytesAvailable;
-                if(nroDatos>5)
-                     try
-                         data = fscanf(sPort);  
-                     end
-                end 
-           miEvent=strtok(data,',');
-        end
-        set(handles.text11,'String','Sensors are ok. GO!');
-        drawnow;
-        fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-        
-        %Enviamos el threshold
-        try
-            fprintf(sPort,(get(handles.edit2,'String')));
-        end
-        
-        % Wait for 'End' code    
-        miEvent='';
-        data='';
-        while(~strcmp(miEvent,'End'))  
-           nroDatos=sPort.BytesAvailable;
-                if(nroDatos>5)
-                     try
-                         data = fscanf(sPort);
-                         fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
-                     end
-                end 
-           miEvent=strtok(data,',');
-        end
-        end
-     
-        
-        set(handles.text8,'Value',get(handles.text8,'Value')+1);
-        set(handles.text7,'String','1/2');
+                set(handles.text11,'String','Please wait. Checking for sensors....');
+                set(handles.text11,'Visible','on');
+                drawnow;
+
+                if(myDebug==0)
+                    % --- Send command to begin ---
+                    try
+                        fprintf(sPort,'1');
+                    end
+
+                    miEvent='';
+                    data='';
+                    while(~strcmp(miEvent,'Timer timeStamp'))  
+                       nroDatos=sPort.BytesAvailable;
+                            if(nroDatos>5)
+                                 try
+                                     data = fscanf(sPort); 
+                                 end
+                            end 
+                       miEvent=strtok(data,',');
+                    end
+                    %set(handles.text11,'String',data);
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+
+                    % --- Send command to iCase[S/H] ---
+                    try
+                        fprintf(sPort,'3');
+                    end
+
+                    miEvent='';
+                    data='';
+                    while(~strcmp(miEvent,'iCase[S|H]'))  
+                       nroDatos=sPort.BytesAvailable;
+                            if(nroDatos>5)
+                                 try
+                                     data = fscanf(sPort);  
+                                 end
+                            end 
+                       miEvent=strtok(data,',');
+                    end
+
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+
+                   % --- Send command to iTimeCase[B/D/A/R] ---
+                    try
+                        fprintf(sPort,':');     %Enviamos el 58
+                    end 
+                    miEvent='';
+                    data='';
+                    while(~strcmp(miEvent,'Sensors states:'))  
+                       nroDatos=sPort.BytesAvailable;
+                            if(nroDatos>5)
+                                 try
+                                     data = fscanf(sPort);  
+                                     fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                                 end
+                            end 
+                       miEvent=strtok(data,',');
+                    end
+
+
+                    % --- Send command to begin ---
+                    try
+                        fprintf(sPort,'1');
+                    end 
+                    miEvent='';
+                    data='';
+                    while(~strcmp(miEvent,'iCommand'))  
+                       nroDatos=sPort.BytesAvailable;
+                            if(nroDatos>5)
+                                 try
+                                     data = fscanf(sPort);  
+                                 end
+                            end 
+                       miEvent=strtok(data,',');
+                    end
+                    set(handles.text11,'String','Sensors are ok. GO!');
+                    drawnow;
+                    fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+
+                    %Enviamos el threshold
+                    try
+                        fprintf(sPort,(get(handles.edit2,'String')));
+                    end
+
+                    % Wait for 'End' code    
+                    miEvent='';
+                    data='';
+                    while(~strcmp(miEvent,'End'))  
+                       nroDatos=sPort.BytesAvailable;
+                            if(nroDatos>5)
+                                 try
+                                     data = fscanf(sPort);
+                                     fprintf(miArchivo,'%s',strcat(datestr(now)),',',data);
+                                 end
+                            end 
+                       miEvent=strtok(data,',');
+                    end
+                 end
+
+
+        %         set(handles.text8,'Value',get(handles.text8,'Value')+1);
+        %         set(handles.text7,'String','1/2');
+                if(get(handles.text4,'Value')==1)
+                        set(handles.text4,'Value',2);
+                        set(handles.text7,'String','2/2');
+                else
+                        set(handles.text4,'Value',1);
+                        set(handles.text8,'Value',get(handles.text8,'Value')+1);
+                        set(handles.text7,'String','1/2');
+                end
      
      case 1     % Case Before 1 steps - 1 light
         set(handles.pushbutton2,'Enable','off'); 
@@ -965,7 +978,7 @@ data='';
                 end 
            miEvent=strtok(data,',');
         end
-         end
+       end
         
         
           if(get(handles.text4,'Value')==1)
@@ -1553,14 +1566,14 @@ data='';
 %         end
 %         end
         
-         if(get(handles.text4,'Value')==1)
-            set(handles.text4,'Value',2);
-            set(handles.text7,'String','2/2');
-         else
-            set(handles.text4,'Value',1);
-            set(handles.text8,'Value',get(handles.text8,'Value')+1);
-            set(handles.text7,'String','1/2');
-         end
+%          if(get(handles.text4,'Value')==1)
+%             set(handles.text4,'Value',2);
+%             set(handles.text7,'String','2/2');
+%          else
+%             set(handles.text4,'Value',1);
+%             set(handles.text8,'Value',get(handles.text8,'Value')+1);
+%             set(handles.text7,'String','1/2');
+%          end
          
     end
     
@@ -1569,8 +1582,8 @@ data='';
         set(handles.text8,'Value',get(handles.text8,'Value')+1);
         set(handles.text7,'String','1/2');
     end
-    get(handles.text8,'Value');
-    if((get(handles.text8,'Value')+1)<12)
+    %get(handles.text8,'Value');
+    if((get(handles.text8,'Value')+1)<(TotalTest+1))
         set(handles.pushbutton2,'Enable','on');
         set(handles.text2,'Enable','off');
         set(handles.text3,'Enable','off');
@@ -1589,10 +1602,10 @@ data='';
             name=strcat(get(handles.text5,'String'),'_log.txt');
             save(name,'orden1','-ascii');
             set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/10',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
         end
-    elseif((get(handles.text8,'Value')+1)==12)     
-         orden1(2,11)=1;
+    elseif((get(handles.text8,'Value')+1)==(TotalTest+1))     
+         orden1(2,(TotalTest))=1;
          if(get(handles.text4,'Value')==1)
             get(handles.text8,'Value');
             orden1(2,get(handles.text8,'Value'))=1;
@@ -1600,10 +1613,10 @@ data='';
             name=strcat(get(handles.text5,'String'),'_log.txt');
             save(name,'orden1','-ascii');
             set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/10',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
           end
          set(handles.text13,'String',strcat(get(handles.text13,'String')...
-            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/10',{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
+            ,{'  -  '},{ '['}, num2str(get(handles.text8,'Value')-1),'/',num2str(TotalTest),{'] '},names{1,orden(get(handles.text8,'Value'))+1}))
          set(handles.pushbutton2,'Enable','on');
          set(handles.text1,'Enable','off');
          set(handles.text2,'Enable','off');
