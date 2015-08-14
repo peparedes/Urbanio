@@ -103,9 +103,9 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 userID=get(handles.edit1,'String');
 delete(instrfindall);
-%sPort=serial('/dev/tty.usbmodemfa142');%COM8');
+sPort=serial('/dev/tty.usbmodemfa142');%COM8');
 
-sPort=serial('COM7');%COM8');
+%sPort=serial('COM7');%COM8');
 fclose(sPort);
 set(sPort,'BaudRate',115200);
 
@@ -157,15 +157,16 @@ else   %
     set(handles.pushbutton2,'String','GO');
     %Revisamos si existe un archivo de log con pruebas anteriores. Si no
     %existe creamos uno
-    set(handles.text5,'UserData',({'0 (Test Run)','3Stp/1Lgt/0Prct','6Stp/1Lgt/0Prct',...
-        '3Stp/2Lgt/0Prct','6Stp/2Lgt/0Prct','3Stp/1Lgt/5Prct','6Stp/1Lgt/5Prct','3Stp/2Lgt/5Prct','6Stp/2Lgt/5Prct','','',''}));
+    set(handles.text5,'UserData',({'0 (Test Run)','1 Light/No Ripple/No Base','2 Lights/No Ripple/No Base',...
+        '1 Light/Ripple/No Base','2 Lights/Ripple/No Base','1 Light/No Ripple/Base','2 Lights/No Ripple/Base','1 Light/Ripple/Base','2 Lights/Ripple/Base','','',''}));
     name=strcat(get(handles.text5,'String'),'_log.txt');
     names=get(handles.text5,'UserData');
     
     TotalTest=8; %Numero total de casos a testear. sin el Test run 0
     if(strcmp(upper(userID),'TEST'))
-        data=1:TotalTest;
-        data1(1,:)=[0 data];
+        %data=1:TotalTest;
+        data=3*ones(1,8);
+        data1(1,:)=[0 1 2 3 4 5 6 7 8];
         data1(2,:)=zeros(1,TotalTest+1);
     else 
         if(exist(name))
@@ -1043,7 +1044,7 @@ data='';
         
        % --- Send command to iTimeCase[B/D/A/R] ---
         try
-            fprintf(sPort,'7');
+            fprintf(sPort,'6');
         end 
         miEvent='';
         data='';
