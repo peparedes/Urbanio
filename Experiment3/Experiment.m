@@ -169,11 +169,11 @@ else   %
         data1(1,:)=[0 1 2 3 4 5 6 7 8];
         data1(2,:)=zeros(1,TotalTest+1);
     else 
-        if(exist(name))
+        if((exist(name))&&(~strcmp(upper(name),'USER_LOG.TXT')))
             data1=load(name)
 
             %Revisamos cual fue la ultima condicion
-            for i=0:10
+            for i=0:TotalTest
                 if(data1(2,i+1)==0)
                     break;
                 else
@@ -188,12 +188,13 @@ else   %
             data=m(pos,2:TotalTest+1);
             m(pos,1)=0;
             pos=pos+1;
-            if(pos>(TotalTest+1))
+            if(pos>(TotalTest))
                 pos=1;
             end
             m(pos,1)=1;
-            save('order.txt','m','-ascii');
-
+            if(~strcmp(upper(userID),'USER'))
+                save('order.txt','m','-ascii');
+            end
             %data=1:9;
             data1(1,:)=[0 data];
             %data1(1,:)=[0 0 0 0 0 0 0 0 0 0];
