@@ -87,7 +87,7 @@ LIGHTMAP = {
 
 for k, v in LIGHTMAP.items():
     #LIGHTMAP[k][2] = LightFunction(walker(1))
-    LIGHTMAP[k][2] = LightFunction(sine([1]))
+    LIGHTMAP[k][2] = LightFunction(walker([1]))
     LIGHTMAP[k][2].update_position(k)
     LIGHTMAP[k][2].update_time(0)
     LIGHTMAP[k][2].increment = 100
@@ -126,11 +126,6 @@ def blink_all(flnode, dur=1000, times=3):
 
 
 def main():
-    f = open('test2.txt', 'r')
-    lines = f.readlines()
-    f.close()
-    lines = [bytes(x, 'ascii') for x in lines if len(x) > 6]
-
     for t in range(0, 16*11):
         for k, v in LIGHTMAP.items():
             rgb = v[2].rgb1
@@ -139,9 +134,6 @@ def main():
             v[2].increment_time()
 
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
-    for x in range(1, 5):
-        MANIFEST[x].send_chunk()
-    time.sleep(7)
     for x in range(1, 5):
         MANIFEST[x].send_chunk()
 
