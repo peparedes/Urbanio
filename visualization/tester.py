@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import socket
 import struct
-import time
 from copy import deepcopy
-MAXBUFSIZE = 20
+import time
+
+MAXBUFSIZE = 100
 
 
 class FLNode:
@@ -12,9 +13,15 @@ class FLNode:
         self.ip = ip
         self.port = port
         self.cmd_q = []
+        self.wait = 0
+        self.next_send = time.time()
 
-    # Probably need to chunk packets
-    def send_program(self, lines):
+    def load_queue(self, lines):
+        self.cmd_q = deepcopy(lines)
+
+    def send_chunk(self, size=MAXBUFSIZE):
+        lines = self.cmd_q
+        t = time.time()
         while len(lines):
             line = b''
             wait = 1000
@@ -28,9 +35,8 @@ class FLNode:
                     line += bytes(cmd, 'ascii')
             wait = max_ts - min_ts - MAXBUFSIZE
             self.send_cmd(line)
-            if len(lines):
-                time.sleep(wait/1000.0)
-                pass
+        self.wait = wait
+        self.next_send = t + wait/1000.0
 
     def send_cmd(self, cmd):
         sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -76,19 +82,22 @@ def blink_all(flnode, dur=1000, times=3):
         for l in (4, 2, 1, 3):
             cmd = mk_cmd(l, 0, 0, 0, dur*t + dur/2 + latency)
             prog.append(cmd)
-    flnode.send_program(prog)
+    flnode.send_chunk(prog)
 
 
 def main():
     f = open('test2.txt', 'r')
     lines = f.readlines()
     f.close()
+    lines = [x for x in lines if len(x) > 6]
     # Breakup file into per-device commands
     # Get device address
     # Start threads to send program
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
-        MANIFEST[x].send_program(deepcopy(lines))
+        flnode = MANIFEST[x]
+        flnode.load_queue(lines)
+        flnode.send_chunk()
 
 
 if __name__ == "__main__":
