@@ -3,6 +3,7 @@ import socket
 import struct
 from copy import deepcopy
 import time
+from entity import *
 
 MAXBUFSIZE = 100
 
@@ -15,6 +16,9 @@ class FLNode:
         self.cmd_q = []
         self.wait = 0
         self.next_send = time.time()
+
+    def push(self, cmd):
+        self.cmd_q.append(cmd)
 
     def load_queue(self, lines):
         self.cmd_q = deepcopy(lines)
@@ -30,9 +34,11 @@ class FLNode:
             for y in range(0, MAXBUFSIZE):
                 if len(lines):
                     cmd = lines.pop(0)
-                    min_ts = min(min_ts, int(cmd.split(',')[-2]))
-                    max_ts = max(max_ts, int(cmd.split(',')[-2]))
-                    line += bytes(cmd, 'ascii')
+                    print(cmd)
+                    ts = int(str(cmd).split(',')[-2])
+                    min_ts = min(min_ts, ts)
+                    max_ts = max(max_ts, ts)
+                    line += cmd
             wait = max_ts - min_ts - MAXBUFSIZE
             self.send_cmd(line)
         self.wait = wait
@@ -51,6 +57,39 @@ MANIFEST = {
     3: FLNode(3, '192.168.1.11', 50002),
     4: FLNode(4, '192.168.1.10', 50001)
 }
+
+FL1 = MANIFEST[1]
+FL2 = MANIFEST[2]
+FL3 = MANIFEST[3]
+FL4 = MANIFEST[4]
+
+LIGHTMAP = {
+    0: [FL1, 1, None],
+    1: [FL1, 2, None],
+    2: [FL1, 3, None],
+    3: [FL1, 4, None],
+
+    4: [FL2, 1, None],
+    5: [FL2, 2, None],
+    6: [FL2, 3, None],
+    7: [FL2, 4, None],
+
+    8: [FL3, 1, None],
+    9: [FL3, 2, None],
+    10: [FL3, 3, None],
+    11: [FL3, 4, None],
+
+    12: [FL4, 1, None],
+    13: [FL4, 2, None],
+    14: [FL4, 3, None],
+    15: [FL4, 4, None]
+}
+
+for k, v in LIGHTMAP.items():
+    LIGHTMAP[k][2] = LightFunction(walker(1))
+    LIGHTMAP[k][2].update_position(k)
+    LIGHTMAP[k][2].update_time(0)
+    LIGHTMAP[k][2].increment = 500
 
 MBED_CLOCK_IP = '192.168.1.10'
 MBED_CLOCK_PORT = 49000
@@ -89,15 +128,27 @@ def main():
     f = open('test2.txt', 'r')
     lines = f.readlines()
     f.close()
-    lines = [x for x in lines if len(x) > 6]
-    # Breakup file into per-device commands
-    # Get device address
-    # Start threads to send program
+    lines = [bytes(x, 'ascii') for x in lines if len(x) > 6]
+
+    for t in range(0, 60):
+        for k, v in LIGHTMAP.items():
+            rgb = v[2].rgb1
+            cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
+            v[0].push(cmd)
+            v[2].increment_time()
+
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
-        flnode = MANIFEST[x]
-        flnode.load_queue(lines)
-        flnode.send_chunk()
+        MANIFEST[x].send_chunk()
+
+    # TODO
+    # Preload and precompute the first 25ms
+    # Every 5 ms update light list and push to nodes as commands
+    # Every 15 ms send the list to the nodes
+    # for x in range(1, 5):
+    #    flnode = MANIFEST[x]
+    #    flnode.load_queue(lines)
+    #    flnode.send_chunk()
 
 
 if __name__ == "__main__":

@@ -13,6 +13,9 @@ class LightEntity:
         self.rgb1 = [0, 0, 0]
         self.length = 0
         self.increment = 5
+        self.pos0 = 0
+        self.pos1 = 0
+        self.camera_pos = 0
 
     def get_point(self, p):
         return self.rgb
@@ -25,13 +28,17 @@ class LightEntity:
         self.v0 = self.v1
         self.v1 = v
 
+    def update_position(self, pos):
+        self.pos0 = self.pos1
+        self.pos1 = pos
+
     def increment_time(self):
         self.t0 = self.t1
         self.t1 += self.increment
         self.update()
 
-    def update(self, pos):
-        self.pos = pos
+    def update(self):
+        pass
 
 
 class LightFunction(LightEntity):
@@ -39,7 +46,20 @@ class LightFunction(LightEntity):
         self.formula = formula
         super(LightFunction, self).__init__()
 
-    def update(self, pos):
-        super(LightFunction, self).update(pos)
+    def update(self):
+        super(LightFunction, self).update()
         self.rgb0 = self.rgb1
         self.rgb1 = self.formula(self)
+
+
+def walker(channel=0):
+
+    def wk(le):
+        rgb = [0, 0, 0]
+        diff = (1-abs(le.pos1 - le.t1/1000.0))*255
+        diff = max(diff, 0)
+        diff = min(diff, 255)
+        rgb[channel] = diff
+        return rgb
+
+    return wk
