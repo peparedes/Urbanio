@@ -5,7 +5,8 @@ from copy import deepcopy
 import time
 from entity import *
 
-MAXBUFSIZE = 100
+MAXBUFSIZE = 5
+MAXINCREMENT = 100
 
 
 class FLNode:
@@ -27,20 +28,21 @@ class FLNode:
         lines = self.cmd_q
         t = time.time()
         wait = 1000
-        while len(lines):
-            line = b''
-            min_ts = 0
-            max_ts = 1000
-            for y in range(0, MAXBUFSIZE):
-                if len(lines):
-                    cmd = lines.pop(0)
-                    print(cmd)
-                    ts = int(str(cmd).split(',')[-2])
-                    min_ts = min(min_ts, ts)
-                    max_ts = max(max_ts, ts)
-                    line += cmd
-            wait = max_ts - min_ts - MAXBUFSIZE
-            self.send_cmd(line)
+        line = b''
+        min_ts = 0
+        max_ts = 0
+        for y in range(0, MAXBUFSIZE):
+            if len(lines):
+                cmd = lines.pop(0)
+                print(cmd)
+                ts = int(str(cmd).split(',')[-2])
+                min_ts = min(min_ts, ts)
+                max_ts = max(max_ts, ts)
+                line += cmd
+            else:
+                break
+        wait = max_ts - min_ts - MAXBUFSIZE
+        self.send_cmd(line)
         self.wait = wait
         self.next_send = t + wait/1000.0
 
@@ -86,11 +88,10 @@ LIGHTMAP = {
 }
 
 for k, v in LIGHTMAP.items():
-    #LIGHTMAP[k][2] = LightFunction(walker(1))
     LIGHTMAP[k][2] = LightFunction(walker([1]))
     LIGHTMAP[k][2].update_position(k)
     LIGHTMAP[k][2].update_time(0)
-    LIGHTMAP[k][2].increment = 100
+    LIGHTMAP[k][2].increment = MAXINCREMENT
 
 MBED_CLOCK_IP = '192.168.1.10'
 MBED_CLOCK_PORT = 49000
@@ -126,7 +127,7 @@ def blink_all(flnode, dur=1000, times=3):
 
 
 def main():
-    for t in range(0, 16*11):
+    for t in range(0, int(17*1000/MAXINCREMENT)):
         for k, v in LIGHTMAP.items():
             rgb = v[2].rgb1
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
@@ -136,6 +137,12 @@ def main():
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
         MANIFEST[x].send_chunk()
+    while len(MANIFEST[x].cmd_q):
+        for x in range(1, 5):
+            MANIFEST[x].send_chunk()
+            print(len(MANIFEST[x].cmd_q))
+        print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
+        time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
 
     # TODO
     # Preload and precompute the first 25ms
