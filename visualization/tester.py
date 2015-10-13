@@ -4,17 +4,18 @@ import struct
 import time
 # import tkinter
 
-MBED_IP = '192.168.1.11'
+MBED_IP = '192.168.1.10'
 MBED_PORT = 50001
-MBED_CLOCK_IP = '192.168.1.11'
+MBED_CLOCK_IP = '192.168.1.10'
 MBED_CLOCK_PORT = 49000
+MBED_BROADCAST = '192.168.1.255'
 
 
-def set_clock(ip, port, value):
+def set_clocks(ip, port, value):
     sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sck.sendto(struct.pack('q', 0), (MBED_CLOCK_IP, MBED_CLOCK_PORT))
+    sck.sendto(struct.pack('q', 0), (ip, port))
     sck.close()
 
 
@@ -31,15 +32,23 @@ def mk_cmd(light, r, g, b, ts):
 
 # Probably need to chunk packets
 def send_program(ip, port, lines):
-    set_clock(ip, port, 0)
+    set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     while len(lines):
         line = b''
-        for y in range(0, 20):
-            while len(lines) and y < 20:
-                line += bytes(lines.pop(0), 'ascii')
+        wait = 1000
+        min_ts = 0
+        max_ts = 1000
+        for y in range(0, 10):
+            if len(lines):
+                cmd = lines.pop(0)
+                min_ts = min(min_ts, int(cmd.split(',')[-2]))
+                max_ts = max(max_ts, int(cmd.split(',')[-2]))
+                line += bytes(cmd, 'ascii')
+        wait = max_ts - min_ts - 10
         send_cmd(ip, port, line)
         # TODO wait as long as the commands take
-        time.sleep(1)
+        if len(lines):
+            time.sleep(wait/1000.0)
 
 
 def blink_all(ip, port, dur=1000, times=3):
