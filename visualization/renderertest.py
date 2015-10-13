@@ -5,7 +5,7 @@ import time
 # import tkinter
 
 MBED_IP = '192.168.1.11'
-MBED_PORT = 54322
+MBED_PORT = 50001
 MBED_CLOCK_IP = '192.168.1.11'
 MBED_CLOCK_PORT = 49000
 
@@ -38,7 +38,7 @@ def send_program(ip, port, lines):
             while len(lines) and y < 20:
                 line += bytes(lines.pop(0), 'ascii')
         send_cmd(ip, port, line)
-        #TODO wait as long as the commands take
+        # TODO wait as long as the commands take
         time.sleep(1)
 
 
@@ -63,8 +63,6 @@ def main():
     lines = f.readlines()
     send_program(MBED_IP, MBED_PORT, lines)
     f.close()
-    # for x in range(0, 1):
-    #    blink_all('192.168.1.11', 54322, 2000, 6)
 
 
 if __name__ == "__main__":
