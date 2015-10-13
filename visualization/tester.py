@@ -86,7 +86,8 @@ LIGHTMAP = {
 }
 
 for k, v in LIGHTMAP.items():
-    LIGHTMAP[k][2] = LightFunction(walker(1))
+    #LIGHTMAP[k][2] = LightFunction(walker(1))
+    LIGHTMAP[k][2] = LightFunction(sine([1]))
     LIGHTMAP[k][2].update_position(k)
     LIGHTMAP[k][2].update_time(0)
     LIGHTMAP[k][2].increment = 100

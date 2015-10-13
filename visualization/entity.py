@@ -12,7 +12,7 @@ class LightEntity:
         self.detected = False
         self.rgb0 = [0, 0, 0]
         self.rgb1 = [0, 0, 0]
-        self.length = 0
+        self.length = 16
         self.increment = 5
         self.pos0 = 0
         self.pos1 = 0
@@ -53,14 +53,31 @@ class LightFunction(LightEntity):
         self.rgb1 = self.formula(self)
 
 
+def on(channel=0):
+    return [255, 255, 255]
+
+
 def walker(channel=0):
 
     def wk(le):
         rgb = [0, 0, 0]
-        diff = math.floor((1-abs(le.pos1 - le.t1/1000.0))*255)
+        diff = math.floor((1-abs(le.pos1 - le.t1/1000.0))*1024)
         diff = max(diff, 0)
         diff = min(diff, 255)
         rgb[channel] = diff
         return rgb
 
     return wk
+
+
+def sine(channels=[0]):
+    def fun(le):
+        rgb = [0, 0, 0]
+        diff = math.floor(math.sin(le.t1/1000.0 + (le.pos1/le.length))*255)
+        diff = max(diff, 0)
+        diff = min(diff, 255)
+        for channel in channels:
+            rgb[channel] = diff
+        return rgb
+
+    return fun
