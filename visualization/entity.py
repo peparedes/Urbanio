@@ -41,6 +41,10 @@ class LightEntity:
     def update(self):
         pass
 
+    def reset_time(self):
+        self.t1 = 0
+        self.t0 = 0
+
 
 class LightFunction(LightEntity):
     def __init__(self, formula):
@@ -57,16 +61,19 @@ def on(channel=0):
     return [255, 255, 255]
 
 
-def walker(channels=None, fade=False):
+def walker(channels=None, shape=.5, speed=800.0, reverse=False):
     if channels is None:
         channels = [0]
 
     def wk(le):
         rgb = [0, 0, 0]
+        fade = True
         if fade:
-            diff = round((1-abs(le.pos1 - le.t1/1000.0))*255)
+            diff = round((1-shape*abs(le.pos1 - le.t1/speed))*255)
+            if reverse:
+                diff = round((1-abs(le.pos1 - le.t1/800.0))*255)
         else:
-            if (1-abs(le.pos1 - le.t1/1000.0)) >= .25:
+            if (1-abs(le.pos1 - le.t1/speed)) >= shape:
                 diff = 255
             else:
                 diff = 0
