@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: ascii -*-
+import math
 
 
 class LightEntity:
@@ -56,7 +57,7 @@ def walker(channel=0):
 
     def wk(le):
         rgb = [0, 0, 0]
-        diff = (1-abs(le.pos1 - le.t1/1000.0))*255
+        diff = math.floor((1-abs(le.pos1 - le.t1/1000.0))*255)
         diff = max(diff, 0)
         diff = min(diff, 255)
         rgb[channel] = diff

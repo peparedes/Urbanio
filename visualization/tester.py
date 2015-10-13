@@ -26,9 +26,9 @@ class FLNode:
     def send_chunk(self, size=MAXBUFSIZE):
         lines = self.cmd_q
         t = time.time()
+        wait = 1000
         while len(lines):
             line = b''
-            wait = 1000
             min_ts = 0
             max_ts = 1000
             for y in range(0, MAXBUFSIZE):
@@ -89,7 +89,7 @@ for k, v in LIGHTMAP.items():
     LIGHTMAP[k][2] = LightFunction(walker(1))
     LIGHTMAP[k][2].update_position(k)
     LIGHTMAP[k][2].update_time(0)
-    LIGHTMAP[k][2].increment = 500
+    LIGHTMAP[k][2].increment = 100
 
 MBED_CLOCK_IP = '192.168.1.10'
 MBED_CLOCK_PORT = 49000
@@ -130,7 +130,7 @@ def main():
     f.close()
     lines = [bytes(x, 'ascii') for x in lines if len(x) > 6]
 
-    for t in range(0, 60):
+    for t in range(0, 16*11):
         for k, v in LIGHTMAP.items():
             rgb = v[2].rgb1
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
@@ -138,6 +138,9 @@ def main():
             v[2].increment_time()
 
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
+    for x in range(1, 5):
+        MANIFEST[x].send_chunk()
+    time.sleep(7)
     for x in range(1, 5):
         MANIFEST[x].send_chunk()
 
