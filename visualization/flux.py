@@ -3,7 +3,9 @@ import socket
 import struct
 from copy import deepcopy
 import time
+import itertools
 from entity import *
+import sys
 
 MAXBUFSIZE = 5
 MAXINCREMENT = 100
@@ -87,12 +89,6 @@ LIGHTMAP = {
     15: [FL4, 4, None]
 }
 
-for k, v in LIGHTMAP.items():
-    LIGHTMAP[k][2] = LightFunction(walker([1,2]))
-    #LIGHTMAP[k][2] = LightFunction(on)
-    LIGHTMAP[k][2].update_position(k)
-    LIGHTMAP[k][2].update_time(0)
-    LIGHTMAP[k][2].increment = MAXINCREMENT
 
 MBED_CLOCK_IP = '192.168.1.10'
 MBED_CLOCK_PORT = 49000
@@ -128,13 +124,28 @@ def blink_all(flnode, dur=1000, times=3):
 
 
 def main():
-    for t in range(0, int(17*1000/MAXINCREMENT)):
+    print(sys.argv)
+    select = int(sys.argv[1])
+    funcs = [(sine([1, 2]), 8), (ran([1, 2]), 10), (on, 5), (walker([1, 2], speed = 1000), 15)]
+    func = funcs[select][0]
+    run_length = funcs[select][1]
+
+    for k, v in LIGHTMAP.items():
+        LIGHTMAP[k][2] = LightFunction(func)
+        LIGHTMAP[k][2].update_position(k)
+        LIGHTMAP[k][2].update_time(0)
+        LIGHTMAP[k][2].increment = MAXINCREMENT
+
+    # add change function
+    # need clearq on  nodes
+    # add reset lights
+    #   clear q and reset parameters
+    for t in range(0, 0 + int(run_length*1000/MAXINCREMENT)):
         for k, v in LIGHTMAP.items():
             rgb = v[2].rgb1
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
             v[0].push(cmd)
             v[2].increment_time()
-
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
         MANIFEST[x].send_chunk()
@@ -146,7 +157,6 @@ def main():
         time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
 
     # TODO
-    # Preload and precompute the first 25ms
     # Every 5 ms update light list and push to nodes as commands
     # Every 15 ms send the list to the nodes
     # for x in range(1, 5):
