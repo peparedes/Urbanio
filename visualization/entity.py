@@ -2,6 +2,7 @@
 # -*- coding: ascii -*-
 import math
 from random import Random
+import sys
 
 RANDOM_SRC = Random()
 
@@ -20,6 +21,7 @@ class LightEntity:
         self.pos0 = 0
         self.pos1 = 0
         self.camera_pos = 0
+        self.trigger_interval = [-sys.maxsize-1, sys.maxsize]
 
     def get_point(self, p):
         return self.rgb
@@ -60,10 +62,30 @@ class LightFunction(LightEntity):
         self.rgb1 = self.formula(self)
 
 
-def on(channel=0):
-    return [255, 255, 255]
+def set_channels(rgb=None):
+    if not rgb:
+        rgb = [255, 255, 255]
+
+    def setter(le):
+        return rgb
+    return setter
 
 
+# def cone(center, viewer, shape):
+#    diff = round((1-shape*abs(center - viewer)*255))
+#    return diff
+
+
+# def gaussian(center, viewer, var):
+    # diff = round((1-var*abs(center - viewer)*255))
+    # return diff
+
+
+# def inverted_exp(center, viewer, shape):
+    # return 255
+
+
+# TODO Update to use trigger interval and camera pos
 def walker(channels=None, shape=.5, speed=1200.0, reverse=False):
     if channels is None:
         channels = [0]
@@ -89,6 +111,7 @@ def walker(channels=None, shape=.5, speed=1200.0, reverse=False):
     return wk
 
 
+# TODO Update to use trigger interval and camera pos
 def sine(channels=None, shape=.5):
     if channels is None:
         channels = [0]
@@ -106,6 +129,7 @@ def sine(channels=None, shape=.5):
     return fun
 
 
+# TODO Update to use trigger interval and camera pos
 def ran(channels=None, minn=0, maxx=255, per_channel=True, delay=1000):
     if channels is None:
         channels = [0]

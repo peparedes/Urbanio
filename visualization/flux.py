@@ -3,12 +3,15 @@ import socket
 import struct
 from copy import deepcopy
 import time
-import itertools
 from entity import *
 import sys
 
+# The maximum number of messages to send to the flnodes
 MAXBUFSIZE = 5
-MAXINCREMENT = 100
+# The time step in milliseconds
+TIMESTEP = 100
+
+LIGHTS_PER_NODE = 4
 
 
 class FLNode:
@@ -107,26 +110,12 @@ def mk_cmd(light, r, g, b, ts):
     return bytes(u'L,{0},{1},{2},{3},{4},'.format(light, r, b, g, ts), 'ascii')
 
 
-def blink_all(flnode, dur=1000, times=3):
-    prog = []
-    latency = 10
-    for l in (4, 2, 1, 3):
-        cmd = mk_cmd(l, 0, 0, 0, latency)
-        prog.append(cmd)
-    for t in range(1, times):
-        for l in (4, 2, 1, 3):
-            cmd = mk_cmd(l, 255, 255, 255, dur*t + latency)
-            prog.append(cmd)
-        for l in (4, 2, 1, 3):
-            cmd = mk_cmd(l, 0, 0, 0, dur*t + dur/2 + latency)
-            prog.append(cmd)
-    flnode.send_chunk(prog)
-
-
 def main():
-    print(sys.argv)
     select = int(sys.argv[1])
-    funcs = [(sine([1, 2]), 8), (ran([1, 2]), 10), (on, 5), (walker([1, 2], speed = 1000), 15)]
+    funcs = [(sine([1, 2]), 8),
+             (ran([1, 2]), 10),
+             (set_channels([255, 255, 255]), 5),
+             (walker([1, 2], speed = 1000), 15)]
     func = funcs[select][0]
     run_length = funcs[select][1]
 
@@ -134,13 +123,13 @@ def main():
         LIGHTMAP[k][2] = LightFunction(func)
         LIGHTMAP[k][2].update_position(k)
         LIGHTMAP[k][2].update_time(0)
-        LIGHTMAP[k][2].increment = MAXINCREMENT
+        LIGHTMAP[k][2].increment = TIMESTEP
 
     # add change function
     # need clearq on  nodes
     # add reset lights
     #   clear q and reset parameters
-    for t in range(0, 0 + int(run_length*1000/MAXINCREMENT)):
+    for t in range(0, 0 + int(run_length*1000/TIMESTEP)):
         for k, v in LIGHTMAP.items():
             rgb = v[2].rgb1
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
@@ -153,16 +142,9 @@ def main():
         for x in range(1, 5):
             MANIFEST[x].send_chunk()
             print(len(MANIFEST[x].cmd_q))
-        print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
-        time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
-
-    # TODO
-    # Every 5 ms update light list and push to nodes as commands
-    # Every 15 ms send the list to the nodes
-    # for x in range(1, 5):
-    #    flnode = MANIFEST[x]
-    #    flnode.load_queue(lines)
-    #    flnode.send_chunk()
+        sleep_time = TIMESTEP*MAXBUFSIZE/LIGHTS_PER_NODE/1000.0
+        print('Sleeping: ' + str())
+        time.sleep(LIGHTS_PER_NODE)
 
 
 if __name__ == "__main__":
