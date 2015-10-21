@@ -146,6 +146,8 @@ def main():
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
             v[0].push(cmd)
             v[2].increment_time()
+    set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 100000)
+    time.sleep(1)
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
         MANIFEST[x].send_chunk()
