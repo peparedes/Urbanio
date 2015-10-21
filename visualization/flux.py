@@ -3,7 +3,6 @@ import socket
 import struct
 from copy import deepcopy
 import time
-import itertools
 from entity import *
 import sys
 
@@ -95,11 +94,12 @@ MBED_CLOCK_PORT = 49000
 MBED_BROADCAST = '192.168.1.255'
 
 
+# TODO Endianness may be wrong
 def set_clocks(ip, port, value):
     sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sck.sendto(struct.pack('q', 0), (ip, port))
+    sck.sendto(struct.pack('bq', 1, value), (ip, port))
     sck.close()
 
 
@@ -126,7 +126,11 @@ def blink_all(flnode, dur=1000, times=3):
 def main():
     print(sys.argv)
     select = int(sys.argv[1])
-    funcs = [(sine([1, 2]), 8), (ran([1, 2]), 10), (on, 5), (walker([1, 2], speed = 1000), 15)]
+    funcs = [(sine([1, 2]), 8),
+             (ran([1, 2]), 10),
+             (on, 5),
+             (walker([1, 2], speed=1000), 15)
+             ]
     func = funcs[select][0]
     run_length = funcs[select][1]
 
