@@ -16,6 +16,9 @@ FL2 = MANIFEST[2]
 FL3 = MANIFEST[3]
 FL4 = MANIFEST[4]
 
+for node in MANIFEST.values():
+    node.start_listening()
+
 LIGHTMAP = {
     0: [FL1, 1, None],
     1: [FL1, 2, None],
@@ -66,7 +69,6 @@ def main():
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
             v[0].push(cmd)
             v[2].increment_time()
-    #set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 100000)
     time.sleep(1)
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
