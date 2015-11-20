@@ -19,7 +19,7 @@ class LightEntity:
         self.increment = 5
         self.pos0 = 0
         self.pos1 = 0
-        self.camera_pos = 0
+        self.viewer_pos = 0
 
     def get_point(self, p):
         return self.rgb
@@ -35,6 +35,9 @@ class LightEntity:
     def update_position(self, pos):
         self.pos0 = self.pos1
         self.pos1 = pos
+
+    def set_viewer(self, pos):
+        self.viewer_pos = pos
 
     def increment_time(self):
         self.t0 = self.t1
@@ -62,6 +65,22 @@ class LightFunction(LightEntity):
 
 def on(channel=0):
     return [255, 255, 255]
+
+
+def tracker(channels=None, shape=.5):
+    if channels is None:
+        channels = [0]
+
+    def tk(le):
+        rgb = [0, 0, 0]
+        diff = round((1-abs((le.viewer_pos - le.pos1)/self.length*shape)**2)*255)
+        diff = max(diff, 0)
+        diff = min(diff, 255)
+        for channel in channels:
+            rgb[channel] = diff
+        return rgb
+
+    return tk
 
 
 def walker(channels=None, shape=.5, speed=1200.0, reverse=False):

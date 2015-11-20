@@ -128,8 +128,8 @@ class FLNode:
         # print(defaultVals)
         values = np.dot([i for i, x in enumerate(defaultVals) if x == 1],
                         span/15)
-        self.pos_values.append(tSamp, defaultVals)
-        if len(self.pos_values) > 100):
+        self.pos_values.append((tSamp, defaultVals))
+        if len(self.pos_values) > 100:
             self.pos_values.pop(0)
 
     def start_listening(self):

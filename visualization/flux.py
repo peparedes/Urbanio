@@ -48,7 +48,7 @@ def main():
     funcs = [(sine([1, 2]), 8),
              (ran([1, 2]), 10),
              (on, 5),
-             (walker([1, 2], speed=200), 30)
+             (walker([1, 2], speed=300), 30)
              ]
     func = funcs[select][0]
     run_length = funcs[select][1]
@@ -56,6 +56,7 @@ def main():
     for k, v in LIGHTMAP.items():
         LIGHTMAP[k][2] = LightFunction(func)
         LIGHTMAP[k][2].update_position(k)
+        LIGHTMAP[k][2].set_viewer(k)
         LIGHTMAP[k][2].update_time(0)
         LIGHTMAP[k][2].increment = MAXINCREMENT
 
