@@ -19,14 +19,14 @@ class LightEntity:
         self.increment = 5
         self.pos0 = 0
         self.pos1 = 0
-        self.camera_pos = 0
+        self.viewer_pos = 0
 
     def get_point(self, p):
         return self.rgb
 
     def update_time(self, t2):
-        while self.t1 < t2:
-            self.increment_time()
+        self.t0 = self.t1
+        self.t1 = t2
 
     def update_velocity(self, v):
         self.v0 = self.v1
@@ -35,6 +35,9 @@ class LightEntity:
     def update_position(self, pos):
         self.pos0 = self.pos1
         self.pos1 = pos
+
+    def set_viewer(self, pos):
+        self.viewer_pos = pos
 
     def increment_time(self):
         self.t0 = self.t1
@@ -62,6 +65,68 @@ class LightFunction(LightEntity):
 
 def on(channel=0):
     return [255, 255, 255]
+
+
+def onwper(person_channel=1, channels=None):
+    if channels is None:
+        channels = list((0,))
+
+    def fun(le):
+        rgb = [0, 0, 0]
+        for channel in channels:
+            rgb[channel] = 255
+        d = thresh(le.pos1, le.viewer_pos, .5)
+        rgb[person_channel] = d
+        return rgb
+    return fun
+
+
+def ranwper(channels=None, person_channel=1, minn=0, maxx=255, per_channel=True, delay=500):
+    if channels is None:
+        channels = [0]
+
+    def fun(le):
+        rgb = [0, 0, 0]
+        intensity = RANDOM_SRC.randint(minn, maxx)
+        for channel in channels:
+            rgb[channel] = intensity
+            if per_channel:
+                intensity = RANDOM_SRC.randint(minn, maxx)
+        if (le.t1 % delay) < 20:
+            rgb_out = []
+            for pt1, pt2 in zip(rgb, le.rgb1):
+                rgb_out.append(math.floor(((pt1+pt2)/2)))
+
+            rgb_out[person_channel] = thresh(le.pos1, le.viewer_pos, .5)
+            return rgb_out
+        else:
+            return le.rgb1
+
+    return fun
+
+def thresh(pos, view, shape):
+    diff = round((1-shape*abs((view - pos)))*255)
+    diff = max(diff, 0)
+    diff = min(diff, 255)
+    return diff
+
+def tracker(channels=None, shape=.5):
+    if channels is None:
+        channels = [0]
+
+    def tk(le):
+        rgb = [0, 0, 0]
+        diff = round(
+            (1-shape*abs((le.viewer_pos - le.pos1)))*255
+        )
+        # print(diff)
+        diff = max(diff, 0)
+        diff = min(diff, 255)
+        for channel in channels:
+            rgb[channel] = diff
+        return rgb
+
+    return tk
 
 
 def walker(channels=None, shape=.5, speed=1200.0, reverse=False):
