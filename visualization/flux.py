@@ -49,7 +49,9 @@ def main():
              (ran([1, 2]), 10),
              (on, 5),
              (walker([1, 2], speed=300), 30),
-             (tracker([1, 2], .5), 30)
+             (tracker([1, 2], .5), 30),
+             (onwper(), 60),
+             (ranwper([1, 2]), 60),
              ]
     func = funcs[select][0]
     run_length = funcs[select][1]
@@ -63,7 +65,7 @@ def main():
 
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     start_t = time.time()*1000
-    while (time.time()*1000 - start_t) < 1000*60:
+    while (time.time()*1000 - start_t) < 1000*run_length:
         increment = 128
         ahead = 2
         future_t = time.time() + increment*ahead/1000.0

@@ -3,6 +3,9 @@
 #ran 1
 #on 2
 #walker 3
+#tracker 4
+#ongreen 5
+#ranred 6
 while true;
 do
 ./flux.py 3
