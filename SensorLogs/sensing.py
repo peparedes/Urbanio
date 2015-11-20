@@ -12,7 +12,7 @@ from pykalman import KalmanFilter
 
 
 #PORT0 = 50003
-PORT1 = 50001
+PORT1 = 50004
 #PORT2 = 50005
 
 
@@ -50,7 +50,7 @@ while True:
     dataArray1=np.asarray(uData1[1:65])
     #dataArray2=np.asarray(uData2[1:65])
 
-    #Ambient Temperatur
+    #Ambient Temperature
     #temp0=np.asarray(uData0[66])
     #temp1=np.asarray(uData1[66])
     #temp2=np.asarray(uData2[66])
@@ -78,6 +78,10 @@ while True:
     #Binarizing the signal (0=no reading, 1=person detected)
     defaultVals=stats.threshold(dataRow,threshmin=threshold,newval=0)
     defaultVals=stats.threshold(defaultVals,threshmax=threshold,newval=1)
+    
+    #False positive filtering
+    
+
     span=3.2
     np.set_printoptions(precision=4)
     print(defaultVals)
@@ -85,6 +89,7 @@ while True:
     if values.size:
         measurements=np.mean(values)
         #print(measurements-span/2)
+
 
         #kf = KalmanFilter(initial_state_mean=0, n_dim_obs=1)
         #kf = kf.em(measurements, n_iter=5)

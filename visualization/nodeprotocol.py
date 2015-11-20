@@ -6,6 +6,7 @@ from scipy import stats
 import time
 from entity import *
 import threading
+import itertools
 
 
 MAXBUFSIZE = 8
@@ -84,7 +85,7 @@ class FLNode:
         for y in range(0, MAXBUFSIZE):
             if len(lines):
                 cmd = lines.pop(0)
-                print(cmd)
+                # print(cmd)
                 parts = str(cmd).split(',')
                 ts = int(parts[-2])
                 min_ts = min(min_ts, ts)
@@ -94,7 +95,7 @@ class FLNode:
                 break
         wait = max_ts - min_ts - MAXBUFSIZE
         self.send_cmd(line)
-        print(line)
+        # print(line)
         self.wait = wait
         self.next_send = t + wait/1000.0
 
@@ -117,7 +118,7 @@ class FLNode:
         tempRowSq = tempRow**2
         # Select a threshold as a percentace above the RMS value
         tempRms = np.sqrt(tempRowSq.sum()/tempRow.size)
-        threshold = tempRms*1.07
+        threshold = tempRms*1.06
 
         # Binarizing the signal (0=no reading, 1=person detected)
         defaultVals = stats.threshold(tempRow, threshmin=threshold, newval=0)
@@ -135,7 +136,8 @@ class FLNode:
     def start_listening(self):
         def rec():
             while True:
-                # print((self.ip, self.pos_values, self.pos_tSamp))
+                # print(self.pos_values)
                 self.recv_cmd()
         self.temp_receiver = threading.Thread(target=rec)
         self.temp_receiver.start()
+
