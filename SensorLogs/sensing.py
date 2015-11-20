@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 __author__ = 'Pablo'
 import socket
 import signal
@@ -12,7 +13,7 @@ from pykalman import KalmanFilter
 
 
 #PORT0 = 50003
-PORT1 = 50001
+PORT1 = 50003
 #PORT2 = 50005
 
 
@@ -34,7 +35,7 @@ while True:
     #print("waiting for UDP data packet...")
 
     #Receiving data from sockets
-    #data0, address0 = sock0.recvfrom(296)   
+    #data0, address0 = sock0.recvfrom(296)
     data1, address1 = sock1.recvfrom(296)
     #data2, address2 = sock2.recvfrom(296)
 
@@ -44,7 +45,7 @@ while True:
     #uData2=s.unpack(data2)
     #print(uData1)
     #print(uData2)
- 
+
     #Linearized 16x4 readings (A0,B0,C0,D0, A1,B1,C1,D1 ... )
     #dataArray0=np.asarray(uData0[1:65])
     dataArray1=np.asarray(uData1[1:65])
@@ -58,7 +59,7 @@ while True:
     #Timestamp Data
     #time0=np.asarray(uData0[72])
     #time1=np.asarray(uData1[72])
-    #time2=np.asarray(uData2[72])    
+    #time2=np.asarray(uData2[72])
 
     #Reconstructing the 16x4 Matrix (transposed)
     dataMat=np.reshape(dataArray1,(16,4))#,dataArray1,dataArray2],(48,4))
@@ -74,7 +75,7 @@ while True:
     dataRms=np.sqrt(dataRowSq.sum()/dataRow.size)
     threshold=dataRms*1.07
     #print(threshold)
-    
+
     #Binarizing the signal (0=no reading, 1=person detected)
     defaultVals=stats.threshold(dataRow,threshmin=threshold,newval=0)
     defaultVals=stats.threshold(defaultVals,threshmax=threshold,newval=1)
