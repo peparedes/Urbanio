@@ -69,9 +69,10 @@ def main():
         increment = 128
         ahead = 2
         future_t = time.time() + increment*ahead/1000.0
+        velocity, position = motion_calculator(MANIFEST)
         for x in range(0, ahead):
             for k, v in LIGHTMAP.items():
-                position = (time.time()*1000 - start_t)/1000
+                # position = (time.time()*1000 - start_t)/1000
                 v[2].update_position(position)
                 v[2].update_time(int(time.time()*1000 - start_t + x*increment))
                 v[2].update()
@@ -81,12 +82,56 @@ def main():
         while len(MANIFEST[x].cmd_q):
             for x in range(1, 5):
                 MANIFEST[x].send_chunk()
-        sleep_time = future_t - time.time() + increment/1000*ahead
+        sleep_time = future_t - time.time()  # + increment/1000*ahead
         if sleep_time > 0:
             time.sleep(sleep_time)
         else:
-            print("falling behind by:%f".format(sleep_time))
+            print("falling behind by:{}".format((sleep_time,)))
 
+def motion_calculator(manifest):
+    # return #(time.time()*1000-0)/1000
+    velocity = 0
+    position = 0
+    positionPrior = 0
+    prior = []
+    present = []
+    globalList = []
+    for k, v in manifest.items():
+        print(k)
+        if len(v.pos_values):
+            globalList.append(list(zip(*v.pos_values))[1])
+    # print(globalList)
+    newList = list(zip(*globalList))
+    # print(newList)
+    if len(newList) > 1:
+        for x in newList[-1]:
+            present.extend(x)
+        for x in newList[-2]:
+            prior.extend(x)
+        prior = np.asarray(prior)
+        present = np.asarray(present)
+        # print(prior)
+        if present.sum() > 1 or prior.sum() > 1:
+            indexes = [i for i, x in enumerate(list(present)) if x == 1]
+            indexesPrior = [i for i, x in enumerate(list(prior)) if x == 1]
+            # print(indexes)
+            pairs = list(np.asarray(indexes[1:]) -
+                         np.asarray(indexes[0:len(indexes)-1]))
+            pairsPrior = list(np.asarray(indexesPrior[1:]) -
+                              np.asarray(indexesPrior[0:len(indexesPrior)-1]))
+            print(pairs)
+            if 1 in pairs or 1 in pairsPrior:
+                if 1 in pairs:
+                    position = indexes[pairs.index(1)]/4
+                elif 1 in pairsPrior:
+                    positionPrior = indexesPrior[pairsPrior.index(1)]/4
+                    position = positionPrior
+                print(position)
+                print(positionPrior)
+            print(present)
+            print(prior)
+
+    return velocity, position
 
 if __name__ == "__main__":
     main()
