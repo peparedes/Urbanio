@@ -68,6 +68,7 @@ class FLNode:
         self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sck.bind(('', self.port))
+        self.alive = True
 
     def push(self, cmd):
         self.cmd_q.append(cmd)
@@ -135,7 +136,7 @@ class FLNode:
 
     def start_listening(self):
         def rec():
-            while True:
+            while self.alive:
                 # print(self.pos_values)
                 self.recv_cmd()
         self.temp_receiver = threading.Thread(target=rec)

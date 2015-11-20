@@ -7,11 +7,10 @@ while true;
 do
 ./flux.py 3
 ./flux.py 3
-./flux.py 3
-./flux.py 3
 ./flux.py 2
 
 ./flux.py 0
+./flux.py 13
 
 ./flux.py 2
 done

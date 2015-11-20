@@ -48,7 +48,7 @@ def main():
              (walker([1, 2], speed=250), 15)
              ]
 
-    if sys.argv[1] == 13:
+    if sys.argv[1] == '13':
         for k, v in MANIFEST.items():
             v.start_listening()
         while not len(FL1.pos_values):
@@ -57,7 +57,7 @@ def main():
         while FL1.pos_values[-1][1][1] != 1:
             print('waiting')
         print('done waiting')
-        sys.argv[1] = 3
+        select = 3
     func = funcs[select][0]
     run_length = funcs[select][1]
 
@@ -89,7 +89,8 @@ def main():
             print(len(MANIFEST[x].cmd_q))
         print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
         time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
-    sys.exit(0)
+    for v in MANIFEST.values():
+        v.alive = False
 
 if __name__ == "__main__":
     main()
