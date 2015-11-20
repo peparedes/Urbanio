@@ -63,7 +63,6 @@ class FLNode:
         self.next_send = time.time()
         self.rec_fmt = struct.Struct('15s 64f f 4H q')
         self.pos_values = []
-        self.pos_tSamp = int(time.time()*1000)
         self.temp_receiver = None
         self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -129,8 +128,9 @@ class FLNode:
         # print(defaultVals)
         values = np.dot([i for i, x in enumerate(defaultVals) if x == 1],
                         span/15)
-        self.pos_values = values
-        self.pos_tSamp = tSamp
+        self.pos_values.append(tSamp, defaultVals)
+        if len(self.pos_values) > 100):
+            self.pos_values.pop(0)
 
     def start_listening(self):
         def rec():
