@@ -10,27 +10,39 @@ MAXINCREMENT = 100
 MBED_CLOCK_PORT = 49000
 MBED_BROADCAST = '192.168.1.255'
 
-FLUSH_BUFFER = 3
-SET_CLOCK = 1
+SET_PROGRAM_CLOCK = 0x01
+SET_GLOBAL_CLOCK = 0x02
+FLUSH_BUFFER = 0x03
+ECHO_MSG = 0x10
 LOG_FILE = "log.txt"
 
 
 def set_clocks(ip, port, value):
     flush_buffer(ip, port)
     time.sleep(.005)
-    broadcast_config(ip, port, SET_CLOCK, value)
+    broadcast_config(ip, port, SET_PROGRAM_CLOCK, value)
+    broadcast_config(ip, port, SET_GLOBAL_CLOCK, int(time.time()*1000))
 
 
 def flush_buffer(ip, port):
     broadcast_config(ip, port, FLUSH_BUFFER)
 
 
+def echo_message(ip, port, msg):
+    msg = msg + '\n'
+    broadcast_struct(ip, port, struct.pack('bs', ECHO_MSG, msg))
+
+
 # TODO Endianness may be wrong
 def broadcast_config(ip, port, cmd, value=0):
+    broadcast_struct(ip, port, struct.pack('bq', cmd, value))
+
+
+def broadcast_struct(ip, port, payload):
     sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sck.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sck.sendto(struct.pack('bq', cmd, value), (ip, port))
+    sck.sendto(payload, (ip, port))
     sck.close()
 
 
