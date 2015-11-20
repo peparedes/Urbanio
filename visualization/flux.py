@@ -45,16 +45,28 @@ def main():
     funcs = [(sine([1, 2]), 8),
              (ran([1, 2]), 10),
              (on, 5),
-             (walker([1, 2], speed=300), 15)
+             (walker([1, 2], speed=250), 15)
              ]
+
+    if sys.argv[1] == 13:
+        for k, v in MANIFEST.items():
+            v.start_listening()
+        while not len(FL1.pos_values):
+            pass
+
+        while FL1.pos_values[-1][1][1] != 1:
+            print('waiting')
+        print('done waiting')
+        sys.argv[1] = 3
     func = funcs[select][0]
     run_length = funcs[select][1]
 
     for k, v in LIGHTMAP.items():
         LIGHTMAP[k][2] = LightFunction(func)
-        LIGHTMAP[k][2].update_position(k)
+        LIGHTMAP[k][2].update_position(k-2.5)
         LIGHTMAP[k][2].update_time(0)
         LIGHTMAP[k][2].increment = MAXINCREMENT
+
 
     # add change function
     # need clearq on  nodes
@@ -77,6 +89,7 @@ def main():
             print(len(MANIFEST[x].cmd_q))
         print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
         time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
