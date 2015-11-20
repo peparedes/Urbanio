@@ -45,7 +45,7 @@ def main():
     funcs = [(sine([1, 2]), 8),
              (ran([1, 2]), 10),
              (on, 5),
-             (walker([1, 2], speed=1000), 15)
+             (walker([1, 2], speed=300), 15)
              ]
     func = funcs[select][0]
     run_length = funcs[select][1]
