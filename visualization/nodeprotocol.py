@@ -8,7 +8,7 @@ from entity import *
 import threading
 
 
-MAXBUFSIZE = 5
+MAXBUFSIZE = 8
 MAXINCREMENT = 75
 MBED_CLOCK_PORT = 49000
 MBED_BROADCAST = '192.168.1.255'

@@ -73,7 +73,10 @@ def tracker(channels=None, shape=.5):
 
     def tk(le):
         rgb = [0, 0, 0]
-        diff = round((1-abs((le.viewer_pos - le.pos1)/self.length*shape)**2)*255)
+        diff = round(
+            (1-shape*abs((le.viewer_pos - le.pos1)))*255
+        )
+        print(diff)
         diff = max(diff, 0)
         diff = min(diff, 255)
         for channel in channels:

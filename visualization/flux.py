@@ -48,7 +48,8 @@ def main():
     funcs = [(sine([1, 2]), 8),
              (ran([1, 2]), 10),
              (on, 5),
-             (walker([1, 2], speed=300), 30)
+             (walker([1, 2], speed=300), 30),
+             (tracker([1, 2], .5), 30)
              ]
     func = funcs[select][0]
     run_length = funcs[select][1]
@@ -63,11 +64,12 @@ def main():
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     start_t = time.time()*1000
     while (time.time()*1000 - start_t) < 1000*60:
-        increment = 64
+        increment = 128
         ahead = 2
         future_t = time.time() + increment*ahead/1000.0
         for x in range(0, ahead):
             for k, v in LIGHTMAP.items():
+                v[2].update_position((time.time()*1000 - start_t)/1000)
                 v[2].update_time(int(time.time()*1000 - start_t + x*increment))
                 v[2].update()
                 rgb = v[2].rgb1
