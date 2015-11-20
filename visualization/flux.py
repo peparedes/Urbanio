@@ -48,7 +48,7 @@ def main():
     funcs = [(sine([1, 2]), 8),
              (ran([1, 2]), 10),
              (on, 5),
-             (walker([1, 2], speed=300), 15)
+             (walker([1, 2], speed=200), 30)
              ]
     func = funcs[select][0]
     run_length = funcs[select][1]
@@ -59,26 +59,28 @@ def main():
         LIGHTMAP[k][2].update_time(0)
         LIGHTMAP[k][2].increment = MAXINCREMENT
 
-    # add change function
-    # need clearq on  nodes
-    # add reset lights
-    #   clear q and reset parameters
-    for t in range(0, 0 + int(run_length*1000/MAXINCREMENT)):
-        for k, v in LIGHTMAP.items():
-            rgb = v[2].rgb1
-            cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
-            v[0].push(cmd)
-            v[2].increment_time()
-    time.sleep(1)
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
-    for x in range(1, 5):
-        MANIFEST[x].send_chunk()
-    while len(MANIFEST[x].cmd_q):
-        for x in range(1, 5):
-            MANIFEST[x].send_chunk()
-            print(len(MANIFEST[x].cmd_q))
-        print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
-        time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
+    start_t = time.time()*1000
+    while (time.time()*1000 - start_t) < 1000*60:
+        increment = 64
+        ahead = 2
+        future_t = time.time() + increment*ahead/1000.0
+        for x in range(0, ahead):
+            for k, v in LIGHTMAP.items():
+                v[2].update_time(int(time.time()*1000 - start_t + x*increment))
+                v[2].update()
+                rgb = v[2].rgb1
+                cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
+                v[0].push(cmd)
+        while len(MANIFEST[x].cmd_q):
+            for x in range(1, 5):
+                MANIFEST[x].send_chunk()
+        sleep_time = future_t - time.time() + increment/1000*ahead
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        else:
+            print("falling behind by:%f".format(sleep_time))
+
 
 if __name__ == "__main__":
     main()

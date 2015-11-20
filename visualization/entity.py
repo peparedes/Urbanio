@@ -25,8 +25,8 @@ class LightEntity:
         return self.rgb
 
     def update_time(self, t2):
-        while self.t1 < t2:
-            self.increment_time()
+        self.t0 = self.t1
+        self.t1 = t2
 
     def update_velocity(self, v):
         self.v0 = self.v1

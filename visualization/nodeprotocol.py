@@ -9,7 +9,7 @@ import threading
 
 
 MAXBUFSIZE = 5
-MAXINCREMENT = 80
+MAXINCREMENT = 75
 MBED_CLOCK_PORT = 49000
 MBED_BROADCAST = '192.168.1.255'
 
@@ -86,7 +86,8 @@ class FLNode:
             if len(lines):
                 cmd = lines.pop(0)
                 print(cmd)
-                ts = int(str(cmd).split(',')[-2])
+                parts = str(cmd).split(',')
+                ts = int(parts[-2])
                 min_ts = min(min_ts, ts)
                 max_ts = max(max_ts, ts)
                 line += cmd
@@ -94,6 +95,7 @@ class FLNode:
                 break
         wait = max_ts - min_ts - MAXBUFSIZE
         self.send_cmd(line)
+        print(line)
         self.wait = wait
         self.next_send = t + wait/1000.0
 
@@ -122,7 +124,7 @@ class FLNode:
         defaultVals = stats.threshold(tempRow, threshmin=threshold, newval=0)
         defaultVals = stats.threshold(defaultVals, threshmax=threshold,
                                     newval=1)
-        print(defaultVals)
+        # print(defaultVals)
         span = 3.2  # Width of sensed floor
         # print(defaultVals)
         values = np.dot([i for i, x in enumerate(defaultVals) if x == 1],
@@ -133,7 +135,7 @@ class FLNode:
     def start_listening(self):
         def rec():
             while True:
-                print((self.ip, self.pos_values, self.pos_tSamp))
+                # print((self.ip, self.pos_values, self.pos_tSamp))
                 self.recv_cmd()
         self.temp_receiver = threading.Thread(target=rec)
         self.temp_receiver.start()
