@@ -69,7 +69,8 @@ def main():
         future_t = time.time() + increment*ahead/1000.0
         for x in range(0, ahead):
             for k, v in LIGHTMAP.items():
-                v[2].update_position((time.time()*1000 - start_t)/1000)
+                position = (time.time()*1000 - start_t)/1000
+                v[2].update_position(position)
                 v[2].update_time(int(time.time()*1000 - start_t + x*increment))
                 v[2].update()
                 rgb = v[2].rgb1
