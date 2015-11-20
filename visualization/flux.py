@@ -1,58 +1,8 @@
 #!/usr/bin/env python3
-import socket
-import struct
-from copy import deepcopy
 import time
 from entity import *
 import sys
-
-MAXBUFSIZE = 5
-MAXINCREMENT = 100
-
-
-class FLNode:
-    def __init__(self, ID, ip, port):
-        self.ID = ID
-        self.ip = ip
-        self.port = port
-        self.cmd_q = []
-        self.wait = 0
-        self.next_send = time.time()
-
-    def push(self, cmd):
-        self.cmd_q.append(cmd)
-
-    def load_queue(self, lines):
-        self.cmd_q = deepcopy(lines)
-
-    def send_chunk(self, size=MAXBUFSIZE):
-        lines = self.cmd_q
-        t = time.time()
-        wait = 1000
-        line = b''
-        min_ts = 0
-        max_ts = 0
-        for y in range(0, MAXBUFSIZE):
-            if len(lines):
-                cmd = lines.pop(0)
-                print(cmd)
-                ts = int(str(cmd).split(',')[-2])
-                min_ts = min(min_ts, ts)
-                max_ts = max(max_ts, ts)
-                line += cmd
-            else:
-                break
-        wait = max_ts - min_ts - MAXBUFSIZE
-        self.send_cmd(line)
-        self.wait = wait
-        self.next_send = t + wait/1000.0
-
-    def send_cmd(self, cmd):
-        sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sck.sendto(cmd, (self.ip, self.port))
-        sck.close()
-
+from nodeprotocol import *
 
 MANIFEST = {
     1: FLNode(1, '192.168.1.13', 50004),
@@ -89,40 +39,6 @@ LIGHTMAP = {
 }
 
 
-MBED_CLOCK_IP = '192.168.1.10'
-MBED_CLOCK_PORT = 49000
-MBED_BROADCAST = '192.168.1.255'
-
-
-# TODO Endianness may be wrong
-def set_clocks(ip, port, value):
-    sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sck.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sck.sendto(struct.pack('bq', 1, value), (ip, port))
-    sck.close()
-
-
-def mk_cmd(light, r, g, b, ts):
-    return bytes(u'L,{0},{1},{2},{3},{4},'.format(light, r, b, g, ts), 'ascii')
-
-
-def blink_all(flnode, dur=1000, times=3):
-    prog = []
-    latency = 10
-    for l in (4, 2, 1, 3):
-        cmd = mk_cmd(l, 0, 0, 0, latency)
-        prog.append(cmd)
-    for t in range(1, times):
-        for l in (4, 2, 1, 3):
-            cmd = mk_cmd(l, 255, 255, 255, dur*t + latency)
-            prog.append(cmd)
-        for l in (4, 2, 1, 3):
-            cmd = mk_cmd(l, 0, 0, 0, dur*t + dur/2 + latency)
-            prog.append(cmd)
-    flnode.send_chunk(prog)
-
-
 def main():
     print(sys.argv)
     select = int(sys.argv[1])
@@ -150,7 +66,7 @@ def main():
             cmd = mk_cmd(v[1], rgb[0], rgb[1], rgb[2], v[2].t1)
             v[0].push(cmd)
             v[2].increment_time()
-    set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 100000)
+    #set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 100000)
     time.sleep(1)
     set_clocks(MBED_BROADCAST, MBED_CLOCK_PORT, 0)
     for x in range(1, 5):
@@ -161,15 +77,6 @@ def main():
             print(len(MANIFEST[x].cmd_q))
         print('Sleeping: ' + str(MAXINCREMENT*MAXBUFSIZE/1000.0/4))
         time.sleep(MAXINCREMENT*MAXBUFSIZE/1000.0/4)
-
-    # TODO
-    # Every 5 ms update light list and push to nodes as commands
-    # Every 15 ms send the list to the nodes
-    # for x in range(1, 5):
-    #    flnode = MANIFEST[x]
-    #    flnode.load_queue(lines)
-    #    flnode.send_chunk()
-
 
 if __name__ == "__main__":
     main()
